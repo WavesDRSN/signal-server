@@ -3,11 +3,37 @@ syntax = "proto3";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
+option java_multiple_files = true;
 option java_package = "gRPC.v1";
 option java_outer_classname = "UserConnectionProto";
 
 service UserConnection{
   rpc LoadUsersList(stream UserConnectionRequest) returns (stream UserConnectionResponse);
+  rpc UserDisconnect(DisconnectRequest) returns (DisconnectResponse);
+}
+
+// В моём понимании запрос на отключение не несет в себе какие-либо переменные,
+// поэтому просто дал текста, если не прав, то пинайте
+message DisconnectResponse{
+  optional string text = 1;
+}
+
+message DisconnectRequest{
+  string name = 1;
+}
+
+enum UserConnectionErrorCode{
+  // Пустая строка имени
+  INVALID_USERNAME = 0;
+  // Истекло время ответа пакетов
+  NOT_ALIVE = 1;
+}
+
+message UserConnectionExceptionResponse{
+  // Когда появилась ошибка
+  google.protobuf.Timestamp timestamp = 1;
+  // Тип ошибки
+  UserConnectionErrorCode error = 2;
 }
 
 message UserConnectionRequest{
@@ -58,11 +84,11 @@ message UsersList{
 
 // Содержит информацию о пользователе - имя, IP, порт
 message User{
-  // Имя пользователя
+  // Имя пользователя должно быть отлично от пустой строки
   string name = 1;
 
   // IP- адрес пользователя, при этом может быть как IPv4, так и IPv6
-  bytes IP_address = 2;
+  string IP_address = 2;
 
   // Номер порта пользователя
   int32 port = 3;
