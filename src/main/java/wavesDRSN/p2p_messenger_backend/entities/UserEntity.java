@@ -16,7 +16,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-// сущность юзера для инфы о юзере, НУЖНО ДОПОЛНИТЬ!!!
+// сущность юзера для инфы о юзере, по мере необходимости дополню
 public class UserEntity {
 
     @Id
@@ -45,4 +45,6 @@ public class UserEntity {
     @Column(nullable = false)
     private LocalDateTime lastActiveAt; // последняя активность
 
+
+    // тк проект с упором в анонимность: email/телефон отсутствует
 }
