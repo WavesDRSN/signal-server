@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -15,7 +16,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-// сущность юзера для инфы о юзере
+// сущность юзера для инфы о юзере, НУЖНО ДОПОЛНИТЬ!!!
 public class UserEntity {
 
     @Id
@@ -23,7 +24,24 @@ public class UserEntity {
     @UuidGenerator
     private UUID id;
 
-    @Column(name = "username")
+    @Column(name = "username", unique = true, nullable = false)
     private String username;
 
+    @Column(name = "password", nullable = false)
+    private String password;
+
+    @Column(name = "publicName", nullable = false) // то есть отображаемое имя для др пользователей
+    private String publicName;
+
+    @Column(name = "bio")
+    private String bio; // описание
+
+    @Column(nullable = false)
+    private Boolean isOnline;
+
+    @Column(name = "createdAt", nullable = false)
+    private LocalDateTime createdAt; // дата регистрации
+
+    @Column(nullable = false)
+    private LocalDateTime lastActiveAt; // последняя активность
 }
