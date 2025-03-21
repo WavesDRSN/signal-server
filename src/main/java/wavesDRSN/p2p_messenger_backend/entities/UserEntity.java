@@ -45,6 +45,5 @@ public class UserEntity {
     @Column(nullable = false)
     private LocalDateTime lastActiveAt; // последняя активность
 
-
-    // тк проект с упором в анонимность: email/телефон отсутствует
+    // тк проект с упором в анонимность: email/телефон отсутствуют
 }
