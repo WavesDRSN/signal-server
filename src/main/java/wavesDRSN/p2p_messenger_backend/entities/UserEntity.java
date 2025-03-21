@@ -44,4 +44,5 @@ public class UserEntity {
 
     @Column(nullable = false)
     private LocalDateTime lastActiveAt; // последняя активность
+
 }
