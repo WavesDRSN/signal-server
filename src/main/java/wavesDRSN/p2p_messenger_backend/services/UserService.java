@@ -38,4 +38,10 @@ public interface UserService {
      */
     UserEntity updateProfile(UUID id, String newPublicName, String newBio);
 
+    /**
+     * Поиск пользователей по публичному имени
+     * @param publicName публичное имя
+     * @return лист пользователей с таким именем или пусто
+     */
+    List<UserEntity> getByPublicName(String publicName);
 }

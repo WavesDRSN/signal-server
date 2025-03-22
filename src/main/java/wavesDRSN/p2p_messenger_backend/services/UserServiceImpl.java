@@ -40,4 +40,9 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+    @Override
+    public List<UserEntity> getByPublicName(String publicName) {
+        return userRepository.findByPublicName(publicName);
+    }
+
 }
