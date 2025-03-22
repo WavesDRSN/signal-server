@@ -16,8 +16,6 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     List<UserEntity> findByPublicName(String publicName); // поиск по публ имени
 
-    List<UserEntity> findByIsOnline(boolean isOnline); // поиск пользователей по статусу
-
     List<UserEntity> findByCreatedAtAfter(LocalDateTime date); // поиск пользователей, зарегистрированных после указанной даты
 
     List<UserEntity> findByLastActiveAtBefore(LocalDateTime date); // {опционально} поиск юзеров, которые не заходили в сеть после указаной даты
