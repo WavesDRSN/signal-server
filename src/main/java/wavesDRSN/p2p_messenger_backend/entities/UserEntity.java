@@ -27,9 +27,6 @@ public class UserEntity {
     @Column(name = "username", unique = true, nullable = false)
     private String username;
 
-    @Column(name = "password", nullable = false)
-    private String password;
-
     @Column(name = "publicName", nullable = false) // то есть отображаемое имя для др пользователей
     private String publicName;
 
