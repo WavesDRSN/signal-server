@@ -30,15 +30,6 @@ public interface UserService {
     List<UserEntity> getAllUsers();
 
     /**
-     * Регистрирует пользователя
-     * @param username уникальное имя пользователя
-     * @param password пароль пользователя
-     * @param publicName публичное имя пользователя
-     * @return новый объект UserEntity
-     */
-    UserEntity registerUser(String username, String password, String publicName);
-
-    /**
      * Обновляет профиль
      * @param id UUID пользователя
      * @param newPublicName новое публичное имя пользователя
@@ -47,17 +38,4 @@ public interface UserService {
      */
     UserEntity updateProfile(UUID id, String newPublicName, String newBio);
 
-    /**
-     * Меняет пароль
-     * @param id UUID пользователя
-     * @param oldPassword старый пароль
-     * @param newPassword новый пароль, на который пользователь меняет старый
-     */
-    void changePassword(UUID id, String oldPassword, String newPassword);
-
-    /**
-    * Удаляет пользователя
-    * @param id UUID пользователя
-    */
-    void deleteUser(UUID id);
 }
