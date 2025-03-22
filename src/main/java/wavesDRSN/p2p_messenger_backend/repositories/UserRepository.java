@@ -9,17 +9,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
-
     Optional<UserEntity> findByUsername(String username); // поиск по уникальному имени юзера
 
     Optional<UserEntity> findById(UUID id);
 
     List<UserEntity> findByPublicName(String publicName); // поиск по публ имени
-
-    List<UserEntity> findByCreatedAtAfter(LocalDateTime date); // поиск пользователей, зарегистрированных после указанной даты
-
-    List<UserEntity> findByLastActiveAtBefore(LocalDateTime date); // {опционально} поиск юзеров, которые не заходили в сеть после указаной даты
-    // например пользователь неактивен 2 недели
-
-
 }
