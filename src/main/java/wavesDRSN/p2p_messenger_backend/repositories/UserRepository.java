@@ -12,6 +12,8 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     Optional<UserEntity> findByUsername(String username); // поиск по уникальному имени юзера
 
+    Optional<UserEntity> findById(UUID id);
+
     List<UserEntity> findByPublicName(String publicName); // поиск по публ имени
 
     List<UserEntity> findByIsOnline(boolean isOnline); // поиск пользователей по статусу
