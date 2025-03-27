@@ -28,7 +28,7 @@ public class OnlineUserServiceImpl implements OnlineUserService {
     @Override
     public Optional<Object> getConnection(String username) {
         return Optional.ofNullable(onlineUsers.get(username))
-                .map(session -> session.getConnection());
+                .map(OnlineUserSession::getConnection);
     }
 
     @Override
@@ -56,4 +56,18 @@ public class OnlineUserServiceImpl implements OnlineUserService {
         long now = System.currentTimeMillis();
         onlineUsers.entrySet().removeIf(entry -> now - entry.getValue().getLastKeepAlive() > TIMEOUT_MILLIS);
     }
+
+
+    /* Для тестов раскомить
+
+    // В классе OnlineUserServiceImpl:
+    public Map<String, OnlineUserSession> getOnlineUsers() {
+        return onlineUsers;
+    }
+
+    public OnlineUserSession getSession(String username) {
+        return onlineUsers.get(username);
+    }
+
+    */
 }
