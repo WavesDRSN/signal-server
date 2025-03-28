@@ -47,6 +47,8 @@ message UserConnectionRequest{
     // Отправка пакета жизни, чтобы подтвердить активность соединения
     // Пакет отправляется раз в промежуток указанный в InitialUserConnectionResponse
     AlivePacket still_alive = 2;
+
+    SessionDescription session_description = 3;
   }
 }
 

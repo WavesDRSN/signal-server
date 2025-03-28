@@ -1,4 +1,4 @@
-package wavesDRSN.p2p_messenger_backend.gRPC;
+package wavesDRSN.p2p_messenger_backend.services.gRPC;
 
 import gRPC.v1.*;
 import io.grpc.stub.StreamObserver;
