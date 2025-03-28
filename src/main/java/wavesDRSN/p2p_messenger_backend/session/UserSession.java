@@ -1,44 +1,26 @@
 package wavesDRSN.p2p_messenger_backend.session;
 
+import gRPC.v1.IceCandidatesMessage;
 import gRPC.v1.SessionDescription;
-import gRPC.v1.User;
 import gRPC.v1.UserConnectionResponse;
-import gRPC.v1.UsersList;
 import io.grpc.stub.StreamObserver;
-import lombok.Getter;
-
-import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 
 public class UserSession {
-    @Getter
     private final String username;
-    private final StreamObserver<UserConnectionResponse> responseObserver;
+    private final StreamObserver<UserConnectionResponse> observer;
     private volatile Instant lastActive;
-    private Duration keepAliveInterval; // TODO не забыть про настройку интервала
+    private StreamObserver<SessionDescription> sdpObserver;
+    private StreamObserver<IceCandidatesMessage> iceObserver;
 
     public UserSession(String username, StreamObserver<UserConnectionResponse> observer) {
         this.username = username;
-        this.responseObserver = observer;
+        this.observer = observer;
         this.lastActive = Instant.now();
     }
 
-    // Отправка списка пользователей
-    public void sendUsersList(List<User> users) {
-        UsersList list = UsersList.newBuilder().addAllUsers(users).build();
-        UserConnectionResponse response = UserConnectionResponse.newBuilder()
-                .setUsersList(list)
-                .build();
-        responseObserver.onNext(response);
-    }
-
-    // Отправка SDP предложения/ответа
-    public void sendSDP(SessionDescription sdp) {
-        UserConnectionResponse response = UserConnectionResponse.newBuilder()
-                .setSessionDescription(sdp)
-                .build();
-        responseObserver.onNext(response);
+    public void sendResponse(UserConnectionResponse response) {
+        observer.onNext(response);
     }
 
     // Обновление времени последней активности
@@ -46,8 +28,33 @@ public class UserSession {
         this.lastActive = Instant.now();
     }
 
-    // Проверка активности
-    public boolean isAlive() {
-        return Duration.between(lastActive, Instant.now()).compareTo(keepAliveInterval) < 0;
+    public Instant getLastActive() {
+        return lastActive;
+    }
+
+    public void setSdpObserver(StreamObserver<SessionDescription> sdpObserver) {
+        this.sdpObserver = sdpObserver;
+    }
+
+    public void setIceObserver(StreamObserver<IceCandidatesMessage> iceObserver) {
+        this.iceObserver = iceObserver;
+    }
+
+    public void sendSDP(SessionDescription sdp) {
+        if (sdpObserver != null) {
+            sdpObserver.onNext(sdp);
+        }
+    }
+
+    public void sendIceCandidates(IceCandidatesMessage candidates) {
+        if (iceObserver != null) {
+            iceObserver.onNext(candidates);
+        }
+    }
+
+    public void close() {
+        observer.onCompleted();
+        if (sdpObserver != null) sdpObserver.onCompleted();
+        if (iceObserver != null) iceObserver.onCompleted();
     }
 }

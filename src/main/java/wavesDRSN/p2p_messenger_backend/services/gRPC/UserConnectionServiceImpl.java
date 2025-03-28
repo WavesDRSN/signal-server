@@ -1,93 +1,164 @@
 package wavesDRSN.p2p_messenger_backend.services.gRPC;
 
+import com.google.protobuf.Duration;
 import gRPC.v1.*;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
-import wavesDRSN.p2p_messenger_backend.session.UserSession;
 import wavesDRSN.p2p_messenger_backend.session.UserSessionManager;
+import wavesDRSN.p2p_messenger_backend.webrtc.IceCandidateHandler;
+import wavesDRSN.p2p_messenger_backend.webrtc.SDPProcessor;
 
 @GrpcService
 public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnectionImplBase {
+
     private final UserSessionManager sessionManager;
+    private final SDPProcessor sdpProcessor;
+    private final IceCandidateHandler iceHandler;
 
     @Autowired
-    public UserConnectionServiceImpl(UserSessionManager sessionManager) {
+    public UserConnectionServiceImpl(UserSessionManager sessionManager,
+                                    SDPProcessor sdpProcessor,
+                                    IceCandidateHandler iceHandler) {
         this.sessionManager = sessionManager;
+        this.sdpProcessor = sdpProcessor;
+        this.iceHandler = iceHandler;
     }
 
-    // Двусторонний потоковый метод для списка пользователей
     @Override
     public StreamObserver<UserConnectionRequest> loadUsersList(
             StreamObserver<UserConnectionResponse> responseObserver) {
         return new StreamObserver<>() {
-            private UserSession session;
+            private String username;
 
             @Override
             public void onNext(UserConnectionRequest request) {
                 if (request.hasInitialRequest()) {
-                    // Первичное подключение
-                    InitialUserConnectionRequest initial = request.getInitialRequest();
-                    session = sessionManager.createSession(initial.getName(), responseObserver);
+                    handleInitialConnection(request.getInitialRequest());
                 } else if (request.hasStillAlive()) {
-                    // Heartbeat
-                    session.updateLastActive();
+                    handleKeepAlive();
+                }
+            }
+
+            private void handleInitialConnection(InitialUserConnectionRequest initialRequest) {
+                username = initialRequest.getName();
+                sessionManager.createSession(username, responseObserver);
+
+                // Исправленный блок построения ответа
+                Duration keepAliveDuration = Duration.newBuilder()
+                    .setSeconds(30)
+                    .build();
+
+                InitialUserConnectionResponse initialResponse = InitialUserConnectionResponse.newBuilder()
+                    .setUserKeepAliveInterval(keepAliveDuration)
+                    .build();
+
+                UserConnectionResponse response = UserConnectionResponse.newBuilder()
+                    .setInitialResponse(initialResponse)
+                    .build();
+
+                responseObserver.onNext(response);
+                sessionManager.broadcastUsersList();
+            }
+
+            private void handleKeepAlive() {
+                if (username != null) {
+                    sessionManager.updateLastActive(username);
                 }
             }
 
             @Override
             public void onError(Throwable t) {
-                sessionManager.removeSession(session.getUsername());
+                cleanup();
             }
 
             @Override
             public void onCompleted() {
+                cleanup();
                 responseObserver.onCompleted();
-                sessionManager.removeSession(session.getUsername());
+            }
+
+            private void cleanup() {
+                if (username != null) {
+                    sessionManager.removeSession(username);
+                }
             }
         };
     }
 
-    // Отправка ICE-кандидатов (двусторонний поток)
     @Override
-    public StreamObserver<IceCandidatesMessage> sendIceCandidates(
-            StreamObserver<IceCandidatesMessage> responseObserver) {
+    public void userDisconnect(DisconnectRequest request,
+                              StreamObserver<DisconnectResponse> responseObserver) {
+        sessionManager.removeSession(request.getName());
+        responseObserver.onNext(DisconnectResponse.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public StreamObserver<SessionDescription> exchangeSDP(
+            StreamObserver<SessionDescription> responseObserver) {
         return new StreamObserver<>() {
+            private String userId;
+
             @Override
-            public void onNext(IceCandidatesMessage message) {
-                // Пересылка кандидатов получателю
-                sessionManager.forwardIceCandidates(message.getReceiver(), message);
-                responseObserver.onNext(message); // Эхо-ответ (или обработка)
+            public void onNext(SessionDescription sdp) {
+                if (userId == null) {
+                    userId = sdp.getSender();
+                    sessionManager.registerSdpObserver(userId, responseObserver);
+                }
+                sdpProcessor.processSDP(sdp);
             }
 
             @Override
             public void onError(Throwable t) {
-                // Логирование ошибки
+                cleanup();
             }
 
             @Override
             public void onCompleted() {
+                cleanup();
                 responseObserver.onCompleted();
+            }
+
+            private void cleanup() {
+                if (userId != null) {
+                    sessionManager.removeSdpObserver(userId);
+                }
             }
         };
     }
 
-    // Обмен SDP
     @Override
-    public void exchangeSDP(SessionDescription request,
-                            StreamObserver<SessionDescription> responseObserver) {
-        sessionManager.forwardSDP(request.getReceiver(), request);
-        responseObserver.onNext(request);
-        responseObserver.onCompleted();
-    }
+    public StreamObserver<IceCandidatesMessage> sendIceCandidates(
+            StreamObserver<IceCandidatesMessage> responseObserver) {
+        return new StreamObserver<>() {
+            private String userId;
 
-    // Отключение пользователя
-    @Override
-    public void userDisconnect(DisconnectRequest request,
-                               StreamObserver<DisconnectResponse> responseObserver) {
-        sessionManager.removeSession(request.getName());
-        responseObserver.onNext(DisconnectResponse.newBuilder()
-                .setText("User " + request.getName() + " disconnected").build());
-        responseObserver.onCompleted();
+            @Override
+            public void onNext(IceCandidatesMessage message) {
+                if (userId == null) {
+                    userId = message.getSender();
+                    sessionManager.registerIceObserver(userId, responseObserver);
+                }
+                iceHandler.handleCandidates(message);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                cleanup();
+            }
+
+            @Override
+            public void onCompleted() {
+                cleanup();
+                responseObserver.onCompleted();
+            }
+
+            private void cleanup() {
+                if (userId != null) {
+                    sessionManager.removeIceObserver(userId);
+                }
+            }
+        };
     }
 }
