@@ -26,28 +26,14 @@ repositories {
 
 def grpcVersion = '1.71.0'
 def protobufVersion = '3.25.5'
-def protocVersion = protobufVersion
-
-protobuf {
-	protoc { artifact = "com.google.protobuf:protoc:${protocVersion}" }
-	plugins {
-		grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" }
-	}
-	generateProtoTasks {
-		all()*.plugins { grpc {} }
-	}
-}
 
 dependencies {
-	implementation "io.grpc:grpc-protobuf:${grpcVersion}"
-	implementation "io.grpc:grpc-services:${grpcVersion}"
+
+	implementation 'net.devh:grpc-spring-boot-starter:2.15.0.RELEASE'
 	implementation "io.grpc:grpc-stub:${grpcVersion}"
+	implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+	implementation "io.grpc:grpc-netty:${grpcVersion}"
 	compileOnly "org.apache.tomcat:annotations-api:6.0.53"
-
-	runtimeOnly "io.grpc:grpc-netty-shaded:${grpcVersion}"
-
-	testImplementation "io.grpc:grpc-testing:${grpcVersion}"
-	testImplementation "io.grpc:grpc-inprocess:${grpcVersion}"
 
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	compileOnly 'org.projectlombok:lombok'
@@ -71,7 +57,21 @@ dependencies {
 	}
 }
 
-
+protobuf {
+	protoc {
+		artifact = "com.google.protobuf:protoc:${protobufVersion}"
+	}
+	plugins {
+		grpc {
+			artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+		}
+	}
+	generateProtoTasks {
+		all()*.plugins {
+			grpc {}
+		}
+	}
+}
 
 sourceSets {
 	main {

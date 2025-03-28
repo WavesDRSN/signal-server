@@ -2,27 +2,30 @@ syntax = "proto3";
 
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 option java_multiple_files = true;
 option java_package = "gRPC.v1";
 option java_outer_classname = "UserConnectionProto";
 
-service UserConnection{
+service UserConnection {
   rpc LoadUsersList(stream UserConnectionRequest) returns (stream UserConnectionResponse);
   rpc UserDisconnect(DisconnectRequest) returns (DisconnectResponse);
+  // Обмен SDP предложением и ответом
+  rpc ExchangeSDP(SessionDescription) returns (SessionDescription);
+  // Отправка группы ICE-кандидатов
+  rpc SendIceCandidates(stream IceCandidatesMessage) returns(stream IceCandidatesMessage);
 }
 
-// В моём понимании запрос на отключение не несет в себе какие-либо переменные,
-// поэтому просто дал текста, если не прав, то пинайте
-message DisconnectResponse{
+message DisconnectResponse {
   optional string text = 1;
 }
 
-message DisconnectRequest{
+message DisconnectRequest {
   string name = 1;
 }
 
-enum UserConnectionErrorCode{
+enum UserConnectionErrorCode {
   // Пустая строка имени
   INVALID_USERNAME = 0;
   // Истекло время ответа пакетов
@@ -44,6 +47,8 @@ message UserConnectionRequest{
     // Отправка пакета жизни, чтобы подтвердить активность соединения
     // Пакет отправляется раз в промежуток указанный в InitialUserConnectionResponse
     AlivePacket still_alive = 2;
+
+    SessionDescription session_description = 3;
   }
 }
 
@@ -66,6 +71,8 @@ message UserConnectionResponse{
     // Содержит список активных пользователей. Пользователь должен запросить список,
     // чтобы получить такой тип ответа
     UsersList users_list = 2;
+    // SDP для обмена предложениями/ответами
+    SessionDescription session_description = 3;
   }
 }
 
@@ -92,4 +99,26 @@ message User{
 
   // Номер порта пользователя
   int32 port = 3;
+}
+
+// Обмен SDP
+message SessionDescription {
+  string sender = 1;
+  string receiver = 2;
+  string type = 3; // "offer" или "answer"
+  string sdp = 4;
+}
+
+// ICE-кандидат (отдельное сообщение)
+message IceCandidate {
+  string sdpMid = 1;
+  int32 sdpMLineIndex = 2;
+  string candidate = 3;
+}
+
+// Группировка ICE-кандидатов в одно сообщение
+message IceCandidatesMessage {
+  string sender = 1;
+  string receiver = 2;
+  repeated IceCandidate candidates = 3;
 }
