@@ -22,39 +22,29 @@ configurations {
 
 repositories {
 	mavenCentral()
+	google()
 }
 
-def grpcVersion = '1.71.0'
+def grpcVersion = '1.58.0' // Совместимая с grpc-spring-boot-starter 2.15.0
 def protobufVersion = '3.25.5'
 
 dependencies {
-
+	// gRPC
 	implementation 'net.devh:grpc-spring-boot-starter:2.15.0.RELEASE'
-	implementation "io.grpc:grpc-stub:${grpcVersion}"
 	implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+	implementation "io.grpc:grpc-stub:${grpcVersion}"
 	implementation "io.grpc:grpc-netty:${grpcVersion}"
 	compileOnly "org.apache.tomcat:annotations-api:6.0.53"
 
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	// Lombok и DevTools
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	// Тесты (JUnit 5)
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'io.grpc:grpc-testing:1.58.0' // Версия должна совпадать с grpc-core
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-	// ТЕСТЫ
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.4'
-
-	// Spring Boot Test (исключаем JUnit 4)
-	testImplementation('org.springframework.boot:spring-boot-starter-test') {
-		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-	}
-
-	// Исключаем JUnit 4 из grpc-testing
-	testImplementation('io.grpc:grpc-testing') {
-		exclude group: 'junit', module: 'junit'
-	}
 }
 
 protobuf {

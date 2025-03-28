@@ -12,9 +12,10 @@ service UserConnection {
   rpc LoadUsersList(stream UserConnectionRequest) returns (stream UserConnectionResponse);
   rpc UserDisconnect(DisconnectRequest) returns (DisconnectResponse);
   // Обмен SDP предложением и ответом
-  rpc ExchangeSDP(SessionDescription) returns (SessionDescription);
+  rpc ExchangeSDP(stream SessionDescription) returns (stream SessionDescription);
+
   // Отправка группы ICE-кандидатов
-  rpc SendIceCandidates(stream IceCandidatesMessage) returns(stream IceCandidatesMessage);
+  rpc SendIceCandidates(stream IceCandidatesMessage) returns (stream IceCandidatesMessage);
 }
 
 message DisconnectResponse {
@@ -47,8 +48,6 @@ message UserConnectionRequest{
     // Отправка пакета жизни, чтобы подтвердить активность соединения
     // Пакет отправляется раз в промежуток указанный в InitialUserConnectionResponse
     AlivePacket still_alive = 2;
-
-    SessionDescription session_description = 3;
   }
 }
 
@@ -71,8 +70,6 @@ message UserConnectionResponse{
     // Содержит список активных пользователей. Пользователь должен запросить список,
     // чтобы получить такой тип ответа
     UsersList users_list = 2;
-    // SDP для обмена предложениями/ответами
-    SessionDescription session_description = 3;
   }
 }
 
@@ -93,12 +90,6 @@ message UsersList{
 message User{
   // Имя пользователя должно быть отлично от пустой строки
   string name = 1;
-
-  // IP- адрес пользователя, при этом может быть как IPv4, так и IPv6
-  string IP_address = 2;
-
-  // Номер порта пользователя
-  int32 port = 3;
 }
 
 // Обмен SDP
