@@ -18,7 +18,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-// инфа о тексте в соо, получателе, отправителе, времени отправки, статусе, к какому чату принадлежит. шифрование?
+// инфа о тексте в соо, получателе, отправителе, времени отправки, статусе, к какому чату принадлежит и тд
 public class MessageEntity {
 
     @Id
@@ -45,7 +45,7 @@ public class MessageEntity {
     @JoinColumn(name = "chatId")
     private ChatEntity chat; // какому чату принадлежит
 
-    //хз надо ли тут @Column(name = "")
+    //@Column(name = "")
     private String text;
 
     @Enumerated(EnumType.STRING)
