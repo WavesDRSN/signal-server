@@ -4,6 +4,8 @@ import com.google.protobuf.Duration;
 import gRPC.v1.*;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import wavesDRSN.p2p_messenger_backend.session.UserSessionManager;
 import wavesDRSN.p2p_messenger_backend.webrtc.IceCandidateHandler;
@@ -12,6 +14,7 @@ import wavesDRSN.p2p_messenger_backend.webrtc.SDPProcessor;
 @GrpcService
 public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnectionImplBase {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserConnectionServiceImpl.class);
     private final UserSessionManager sessionManager;
     private final SDPProcessor sdpProcessor;
     private final IceCandidateHandler iceHandler;
@@ -102,20 +105,34 @@ public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnection
 
             @Override
             public void onNext(SessionDescription sdp) {
-                if (userId == null) {
-                    userId = sdp.getSender();
-                    sessionManager.registerSdpObserver(userId, responseObserver);
+                try {
+                    logger.debug("Received SDP from {} to {} (type: {})",
+                        sdp.getSender(), sdp.getReceiver(), sdp.getType());
+
+                    if (userId == null) {
+                        userId = sdp.getSender();
+                        sessionManager.registerSdpObserver(userId, responseObserver);
+                        logger.info("Registered SDP observer for user: {}", userId);
+                    }
+
+                    logger.debug("Processing SDP for {}", sdp.getReceiver());
+                    sdpProcessor.processSDP(sdp);
+                    logger.debug("SDP processed successfully");
+
+                } catch (Exception e) {
+                    logger.error("Error processing SDP from {}: {}", sdp.getSender(), e.getMessage(), e);
                 }
-                sdpProcessor.processSDP(sdp);
             }
 
             @Override
             public void onError(Throwable t) {
+                logger.warn("SDP stream error for {}: {}", userId, t.getMessage(), t);
                 cleanup();
             }
 
             @Override
             public void onCompleted() {
+                logger.info("SDP stream completed for {}", userId);
                 cleanup();
                 responseObserver.onCompleted();
             }
@@ -136,20 +153,35 @@ public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnection
 
             @Override
             public void onNext(IceCandidatesMessage message) {
-                if (userId == null) {
-                    userId = message.getSender();
-                    sessionManager.registerIceObserver(userId, responseObserver);
+                try {
+                    logger.debug("Received {} ICE candidates from {} to {}",
+                        message.getCandidatesCount(), message.getSender(), message.getReceiver());
+
+                    if (userId == null) {
+                        userId = message.getSender();
+                        sessionManager.registerIceObserver(userId, responseObserver);
+                        logger.info("Registered ICE observer for user: {}", userId);
+                    }
+
+                    logger.debug("Forwarding ICE candidates to {}", message.getReceiver());
+                    iceHandler.handleCandidates(message);
+                    logger.debug("ICE candidates forwarded successfully");
+
+                } catch (Exception e) {
+                    logger.error("Error processing ICE candidates from {}: {}",
+                        message.getSender(), e.getMessage(), e);
                 }
-                iceHandler.handleCandidates(message);
             }
 
             @Override
             public void onError(Throwable t) {
+                logger.warn("ICE stream error for {}: {}", userId, t.getMessage(), t);
                 cleanup();
             }
 
             @Override
             public void onCompleted() {
+                logger.info("ICE stream completed for {}", userId);
                 cleanup();
                 responseObserver.onCompleted();
             }
