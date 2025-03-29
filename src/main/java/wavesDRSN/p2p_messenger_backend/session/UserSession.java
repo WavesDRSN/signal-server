@@ -4,8 +4,11 @@ import gRPC.v1.IceCandidatesMessage;
 import gRPC.v1.SessionDescription;
 import gRPC.v1.UserConnectionResponse;
 import io.grpc.stub.StreamObserver;
+import lombok.Getter;
+
 import java.time.Instant;
 
+@Getter
 public class UserSession {
     private final String username;
     private final StreamObserver<UserConnectionResponse> observer;
@@ -57,4 +60,5 @@ public class UserSession {
         if (sdpObserver != null) sdpObserver.onCompleted();
         if (iceObserver != null) iceObserver.onCompleted();
     }
+
 }

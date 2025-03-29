@@ -2,6 +2,8 @@ package wavesDRSN.p2p_messenger_backend.session;
 
 import gRPC.v1.*;
 import io.grpc.stub.StreamObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -15,6 +17,7 @@ import java.util.concurrent.*;
 public class UserSessionManager {
     private final Map<String, UserSession> sessions = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private static final Logger logger = LoggerFactory.getLogger(UserSessionManager.class);
 
     @PostConstruct
     public void init() {
@@ -43,16 +46,24 @@ public class UserSessionManager {
     }
 
     public void registerSdpObserver(String userId, StreamObserver<SessionDescription> observer) {
+        logger.debug("Registering SDP observer for {}", userId);
         UserSession session = sessions.get(userId);
         if (session != null) {
             session.setSdpObserver(observer);
+            logger.info("SDP observer registered for {}", userId);
+        } else {
+            logger.warn("Attempt to register SDP observer for non-existent user: {}", userId);
         }
     }
 
     public void registerIceObserver(String userId, StreamObserver<IceCandidatesMessage> observer) {
+        logger.debug("Registering ICE observer for {}", userId);
         UserSession session = sessions.get(userId);
         if (session != null) {
             session.setIceObserver(observer);
+            logger.info("ICE observer registered for {}", userId);
+        } else {
+            logger.warn("Attempt to register ICE observer for non-existent user: {}", userId);
         }
     }
 
@@ -96,10 +107,15 @@ public class UserSessionManager {
     }
 
     private void checkInactiveSessions() {
+        logger.debug("Checking inactive sessions");
         Instant now = Instant.now();
-        sessions.values().removeIf(session ->
-            Duration.between(session.getLastActive(), now).toMinutes() > 5
-        );
+        sessions.values().removeIf(session -> {
+            boolean isInactive = Duration.between(session.getLastActive(), now).toMinutes() > 5;
+            if (isInactive) {
+                logger.info("Removing inactive session: {}", session.getUsername());
+            }
+            return isInactive;
+        });
         broadcastUsersList();
     }
 
