@@ -15,7 +15,7 @@ services:
     restart: always
 
   p2p-database:
-    image: postgres:17.2-alpine
+    image: postgres:17.2
     restart: unless-stopped
     ports:
       - "5432:5432"
@@ -23,7 +23,7 @@ services:
       - p2p-database_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: p2p_user
-      POSTGRES_PASSWORD: p2p_password
+      POSTGRES_PASSWORD: LqdCmTlqPr7W9RLL
       POSTGRES_DB: p2p_db
     networks:
       - p2p-net

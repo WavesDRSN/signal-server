@@ -1,39 +1,28 @@
 # Этап сборки
-FROM gradle:8.7-jdk21-alpine AS build
-WORKDIR /app
-
-COPY build.gradle settings.gradle gradlew ./
-COPY gradle/ gradle/
-COPY src/ src/
-COPY proto/ proto/
-
-# Генерация Protobuf + сборка проекта
-RUN gradle clean build -x test
-
-# Этап извлечения слоев
-FROM bellsoft/liberica-openjre-alpine:21 AS layers
+FROM gradle:8.7-jdk21-jammy AS build
 
 WORKDIR /app
+COPY . .
 
-COPY --from=build /app/build/libs/*.jar app.jar
+# Сборка
+RUN gradle --no-daemon clean bootJar -x test
 
-# Извлечение слоев Spring Boot
-RUN java -Djarmode=layertools -jar app.jar extract
-
-# Этап подготовки окружения
+# Финальный образ
 FROM bellsoft/liberica-openjre-alpine:21
-VOLUME /tmp
-RUN adduser -S app-user
+
+# Настройка пользователя и прав
+RUN adduser -S app-user && \
+    mkdir -p /app && \
+    chown app-user /app
+
+WORKDIR /app
 USER app-user
-COPY --from=layers /app/dependencies/ ./
-COPY --from=layers /app/spring-boot-loader/ ./
-COPY --from=layers /app/snapshot-dependencies/ ./
-COPY --from=layers /app/application/ ./
 
-# Копирование миграций Flyway
-COPY db/migration ./db/migration/
+# Копируем JAR и миграции
+COPY --from=build --chown=app-user /app/build/libs/p2p-messenger-backend-*.jar app.jar
+COPY db ./db
 
-# Порты
 EXPOSE 50051
 
-ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
+# Запуск приложения
+ENTRYPOINT ["java", "-jar", "app.jar"]
