@@ -16,9 +16,6 @@ public class IceCandidateHandler {
     private static final Logger logger = LoggerFactory.getLogger(IceCandidateHandler.class);
 
     public void handleCandidates(IceCandidatesMessage message) {
-        sessionManager.getSession(message.getReceiver()).ifPresent(receiver ->
-            receiver.sendIceCandidates(message)
-        );
         try {
             logger.debug("Handling {} ICE candidates from {} to {}",
                 message.getCandidatesCount(), message.getSender(), message.getReceiver());

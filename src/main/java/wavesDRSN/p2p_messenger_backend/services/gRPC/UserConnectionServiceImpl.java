@@ -109,16 +109,16 @@ public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnection
                     logger.debug("Received SDP from {} to {} (type: {})",
                         sdp.getSender(), sdp.getReceiver(), sdp.getType());
 
-                    if (userId == null) {
+                    if (userId == null && sdp.getReceiver().equals("SERVER")) {
                         userId = sdp.getSender();
                         sessionManager.registerSdpObserver(userId, responseObserver);
                         logger.info("Registered SDP observer for user: {}", userId);
                     }
-
-                    logger.debug("Processing SDP for {}", sdp.getReceiver());
-                    sdpProcessor.processSDP(sdp);
-                    logger.debug("SDP processed successfully");
-
+                    else {
+                        logger.debug("Processing SDP for {}", sdp.getReceiver());
+                        sdpProcessor.processSDP(sdp);
+                        logger.debug("SDP processed successfully");
+                    }
                 } catch (Exception e) {
                     logger.error("Error processing SDP from {}: {}", sdp.getSender(), e.getMessage(), e);
                 }
@@ -157,15 +157,16 @@ public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnection
                     logger.debug("Received {} ICE candidates from {} to {}",
                         message.getCandidatesCount(), message.getSender(), message.getReceiver());
 
-                    if (userId == null) {
+                    if (userId == null && message.getReceiver().equals("SERVER")) {
                         userId = message.getSender();
                         sessionManager.registerIceObserver(userId, responseObserver);
                         logger.info("Registered ICE observer for user: {}", userId);
                     }
-
-                    logger.debug("Forwarding ICE candidates to {}", message.getReceiver());
-                    iceHandler.handleCandidates(message);
-                    logger.debug("ICE candidates forwarded successfully");
+                    else {
+                        logger.debug("Forwarding ICE candidates to {}", message.getReceiver());
+                        iceHandler.handleCandidates(message);
+                        logger.debug("ICE candidates forwarded successfully");
+                    }
 
                 } catch (Exception e) {
                     logger.error("Error processing ICE candidates from {}: {}",
