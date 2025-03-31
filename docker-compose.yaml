@@ -1,0 +1,35 @@
+services:
+  p2p-app:
+    image: p2p-tag
+    build: .
+    ports:
+      - "50051:50051"
+    volumes:
+      - p2p-db-migration:/db/migration
+    environment:
+      DATABASE_URL: p2p-database
+    depends_on:
+      - p2p-database
+    networks:
+      - p2p-net
+    restart: always
+
+  p2p-database:
+    image: postgres:17.2
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - p2p-database_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: p2p_user
+      POSTGRES_PASSWORD: LqdCmTlqPr7W9RLL
+      POSTGRES_DB: p2p_db
+    networks:
+      - p2p-net
+
+volumes:
+  p2p-database_data:
+  p2p-db-migration:
+networks:
+  p2p-net:
