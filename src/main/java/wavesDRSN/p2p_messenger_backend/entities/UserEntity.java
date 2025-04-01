@@ -25,10 +25,10 @@ public class UserEntity {
     private Long id;
 
     @Column(nullable = false, length = 32)
-    @NotBlank(message = "Login не может быть пустым")
+    @NotBlank(message = "Username не может быть пустым")
     @Size(min = 5, max = 32, message = "Длина логина должна быть от 5 до 32 символов")
     @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Логин может содержать только латинские буквы, цифры и символ подчеркивания")
-    private String login;
+    private String username;
 
     @Column(name = "public_key", nullable = false, unique = true, columnDefinition = "BYTEA")
     @NotBlank(message = "Публичный ключ не может быть пустым")
