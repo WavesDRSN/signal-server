@@ -30,9 +30,9 @@ public class UserEntity {
     @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Логин может содержать только латинские буквы, цифры и символ подчеркивания")
     private String login;
 
-    @Column(name = "public_key", nullable = false, unique = true, columnDefinition = "TEXT")
+    @Column(name = "public_key", nullable = false, unique = true, columnDefinition = "BYTEA")
     @NotBlank(message = "Публичный ключ не может быть пустым")
-    private String publicKey;
+    private byte[] publicKey;
 
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;

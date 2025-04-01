@@ -1,7 +1,7 @@
 CREATE TABLE users (
                        id BIGSERIAL PRIMARY KEY, -- автоинкрементный уник ID
                        login VARCHAR(32) NOT NULL, -- логин
-                       public_key TEXT NOT NULL UNIQUE, -- публичный ключ
+                       public_key BYTEA NOT NULL UNIQUE, -- публичный ключ
                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- дата регистрации юзера
 
     -- Ограничения
