@@ -29,8 +29,11 @@ repositories {
 	google()
 }
 
-def grpcVersion = '1.58.0' // Совместимая с grpc-spring-boot-starter 2.15.0
-def protobufVersion = '3.25.5'
+ext {
+	grpcVersion = '1.58.0' // Совместимая с grpc-spring-boot-starter 2.15.0
+	protobufVersion = '3.25.5'
+	bouncyCastleVersion = '1.80' // Криптография
+}
 
 dependencies {
 	// gRPC
@@ -47,21 +50,20 @@ dependencies {
 
 	// Тесты (JUnit 5)
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'io.grpc:grpc-testing:1.58.0' // Версия должна совпадать с grpc-core
+	testImplementation "io.grpc:grpc-testing:${grpcVersion}" // Версия должна совпадать с grpc-core
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	// БД, миграции, JPA
+	// Для работы с БД, миграции, JPA
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
 	implementation 'org.flywaydb:flyway-core'
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	runtimeOnly 'org.postgresql:postgresql'
-
-	// Spring Boot стартер для работы с JPA (Hibernate включен)
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-	// Стартер для валидации (в Spring Boot 3+ используется jakarta.validation)
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Bouncy Castle
+	implementation "org.bouncycastle:bcprov-jdk15on:${bouncyCastleVersion}"
+	implementation "org.bouncycastle:bcpkix-jdk15on:${bouncyCastleVersion}" // Для X.509
 }
 
 protobuf {
