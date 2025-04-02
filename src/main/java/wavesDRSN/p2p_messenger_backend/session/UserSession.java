@@ -12,12 +12,15 @@ import java.time.Instant;
 public class UserSession {
     private final String username;
     private final StreamObserver<UserConnectionResponse> observer;
+    private final String userKey;
     private volatile Instant lastActive;
     private StreamObserver<SessionDescription> sdpObserver;
     private StreamObserver<IceCandidatesMessage> iceObserver;
 
-    public UserSession(String username, StreamObserver<UserConnectionResponse> observer) {
+    public UserSession(String username, String userKey, 
+                      StreamObserver<UserConnectionResponse> observer) {
         this.username = username;
+        this.userKey = userKey;
         this.observer = observer;
         this.lastActive = Instant.now();
     }
