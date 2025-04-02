@@ -5,6 +5,10 @@ plugins {
 	id 'com.google.protobuf' version "0.9.4"
 }
 
+jar {
+	enabled = false
+}
+
 group = 'wavesDRSN'
 version = '0.0.1-SNAPSHOT'
 
@@ -45,6 +49,19 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.grpc:grpc-testing:1.58.0' // Версия должна совпадать с grpc-core
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// БД, миграции, JPA
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-database-postgresql'
+	runtimeOnly 'org.postgresql:postgresql'
+
+	// Spring Boot стартер для работы с JPA (Hibernate включен)
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// Стартер для валидации (в Spring Boot 3+ используется jakarta.validation)
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 protobuf {
