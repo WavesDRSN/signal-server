@@ -52,6 +52,11 @@ public class UserSessionManager {
         }
     }
 
+    public String getUsernameByKey(String key) {
+        if (validateKey(key)) return keyToUserMap.get(key);
+        return null;
+    }
+
     public boolean validateKey(String userKey) {
         return keyToUserMap.containsKey(userKey);
     }
@@ -65,7 +70,7 @@ public class UserSessionManager {
             .map(sessions::get);
     }
 
-    public void registerSdpObserver(String userId, StreamObserver<SessionDescription> observer) {
+    public void registerSdpObserver(String userId, StreamObserver<SDPExchange> observer) {
         logger.debug("Registering SDP observer for {}", userId);
         UserSession session = sessions.get(userId);
         if (session != null) {
@@ -76,7 +81,7 @@ public class UserSessionManager {
         }
     }
 
-    public void registerIceObserver(String userId, StreamObserver<IceCandidatesMessage> observer) {
+    public void registerIceObserver(String userId, StreamObserver<ICEExchange> observer) {
         logger.debug("Registering ICE observer for {}", userId);
         UserSession session = sessions.get(userId);
         if (session != null) {

@@ -62,14 +62,11 @@ public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnection
 
                 InitialUserConnectionResponse initialResponse = InitialUserConnectionResponse.newBuilder()
                     .setUserKeepAliveInterval(keepAliveDuration)
+                    .setUserKey(userKey)
                     .build();
 
                 UserConnectionResponse response = UserConnectionResponse.newBuilder()
-                    .setInitialResponse(InitialUserConnectionResponse.newBuilder()
-                        .setUserKeepAliveInterval(
-                            com.google.protobuf.Duration.newBuilder().setSeconds(30))
-                        .setUserKey(userKey)
-                        .build())
+                    .setInitialResponse(initialResponse)
                     .build();
 
                 responseObserver.onNext(response);
@@ -127,6 +124,7 @@ public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnection
             StreamObserver<SDPExchange> responseObserver) {
         return new StreamObserver<SDPExchange>() {
             private String userKey;
+            private String userName;
             private boolean authenticated = false;
 
             @Override
@@ -151,6 +149,7 @@ public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnection
                             .setApproved(true)
                             .build())
                         .build());
+                    sessionManager.registerSdpObserver(sessionManager.getUsernameByKey(userKey), responseObserver);
                     logger.info("SDP stream authenticated for key: {}", userKey);
                 } else {
                     responseObserver.onNext(SDPExchange.newBuilder()
@@ -220,6 +219,7 @@ public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnection
                             .setApproved(true)
                             .build())
                         .build());
+                    sessionManager.registerIceObserver(sessionManager.getUsernameByKey(userKey), responseObserver);
                     logger.info("ICE stream authenticated for key: {}", userKey);
                 } else {
                     responseObserver.onNext(ICEExchange.newBuilder()
