@@ -21,13 +21,13 @@ public class CryptographyServiceImpl implements CryptographyService {
             // восстанавливает объект PublicKey
             return keyFactory.generatePublic(keySpec);
         } catch (NoSuchAlgorithmException e) {
-            log.error("Алгоритм не поддерживается: {}", e.getMessage());
+            log.error("Алгоритм Ed25519 не поддерживается: {}", e.getMessage(), e);
         } catch (NoSuchProviderException e) {
-            log.error("Провайдер не найден: {}", e.getMessage());
+            log.error("Провайдер Bouncy Castle не найден: {}", e.getMessage(), e);
         } catch (InvalidKeySpecException e) {
-            log.error("Неверная спецификация ключа: {}", e.getMessage());
+            log.error("Неверная спецификация ключа: {}", e.getMessage(), e);
         } catch (Exception e) {
-            log.error("Произошла непредвиденная ошибка при загрузке ключа: {}", e.getMessage());
+            log.error("Произошла непредвиденная ошибка при загрузке ключа: {}", e.getMessage(), e);
         }
         return null;
     }
