@@ -14,9 +14,12 @@ public class CryptographyServiceImpl implements CryptographyService {
     @Override
     public PublicKey parsePublicKey(byte[] publicKeyDerBytes) {
         try {
-            KeyFactory keyFactory = KeyFactory.getInstance("Ed25519", "BC"); // создает ключ из байт
-            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyDerBytes); // для распознавания ключа
-            return keyFactory.generatePublic(keySpec); // возвращает готовый PublicKey
+            // объект для восстановления ключа из байтов
+            KeyFactory keyFactory = KeyFactory.getInstance("Ed25519", "BC");
+            // превращает массив байт publicKeyDerBytes в объект X509EncodedKeySpec
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyDerBytes);
+            // восстанавливает объект PublicKey
+            return keyFactory.generatePublic(keySpec);
         } catch (NoSuchAlgorithmException e) {
             log.error("Алгоритм не поддерживается: {}", e.getMessage());
         } catch (NoSuchProviderException e) {
@@ -32,9 +35,13 @@ public class CryptographyServiceImpl implements CryptographyService {
     @Override
     public boolean verifySignature(PublicKey publicKey, byte[] data, byte[] signatureBytes) {
         try {
-            Signature signature = Signature.getInstance("Ed25519", "BC");
+            // объект для крипто операций
+            Signature signature = Signature.getInstance("Ed25519", "BC"); // объект умеет
+            // проверка подписи
             signature.initVerify(publicKey);
+            // передаем оригинальные данные cache из CacheChallenge
             signature.update(data);
+            // сравниваем предоставленную подпись с вычисленной и возвращаем ture/false
             return signature.verify(signatureBytes);
         } catch (NoSuchAlgorithmException e) {
             log.error("Алгоритм Ed25519 не поддерживается: {}", e.getMessage(), e);
