@@ -12,7 +12,7 @@ import java.security.spec.X509EncodedKeySpec;
 public class CryptographyServiceImpl implements CryptographyService {
 
     @Override
-    public PublicKey parsePublicKey(byte[] publicKeyDerBytes) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
+    public PublicKey parsePublicKey(byte[] publicKeyDerBytes) {
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("Ed25519", "BC"); // создает ключ из байт
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyDerBytes); // для распознавания ключа
@@ -30,7 +30,7 @@ public class CryptographyServiceImpl implements CryptographyService {
     }
 
     @Override
-    public boolean verifySignature(PublicKey publicKey, byte[] data, byte[] signatureBytes) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException {
+    public boolean verifySignature(PublicKey publicKey, byte[] data, byte[] signatureBytes) {
         try {
             Signature signature = Signature.getInstance("Ed25519", "BC");
             signature.initVerify(publicKey);

@@ -1,7 +1,6 @@
 package wavesDRSN.p2p_messenger_backend.services;
 
 import java.security.*;
-import java.security.spec.InvalidKeySpecException;
 
 public interface CryptographyService {
     /**
@@ -9,7 +8,7 @@ public interface CryptographyService {
      * @param publicKeyDerBytes массив байт публичного ключа
      * @return объект PublicKey, с которым может работать java и Bouncy Castle
      */
-    PublicKey parsePublicKey(byte[] publicKeyDerBytes) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException;
+    PublicKey parsePublicKey(byte[] publicKeyDerBytes);
 
     /**
      * Проверяет, правда ли данные были подписаны приватным ключом подходящим под публичный ключ из БД
@@ -18,5 +17,5 @@ public interface CryptographyService {
      * @param signatureBytes отдельное док-во, присланное клиентом с помощью приватного ключа, data и Ed25519
      * @return ДА/НЕТ
      */
-    boolean verifySignature(PublicKey publicKey, byte[] data, byte[] signatureBytes) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException;
+    boolean verifySignature(PublicKey publicKey, byte[] data, byte[] signatureBytes);
 }
