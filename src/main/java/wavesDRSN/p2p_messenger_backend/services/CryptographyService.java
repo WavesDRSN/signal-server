@@ -3,8 +3,6 @@ package wavesDRSN.p2p_messenger_backend.services;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 
-// TODO: сервисный класс (Spring Bean), отвечающий за криптографические операции, связанные с аутентификацией
-// TODO: Bouncy Castle подключить, прочитай про это либо в Gemini(акк с Антоном) или в Обсидиан
 public interface CryptographyService {
     /**
      * Преобразовывает сырые байты публ ключа из формата X.509 SPKI DER в PublicKey
