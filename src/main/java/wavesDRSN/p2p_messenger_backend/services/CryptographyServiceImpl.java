@@ -41,7 +41,7 @@ public class CryptographyServiceImpl implements CryptographyService {
             signature.initVerify(publicKey);
             // передаем оригинальные данные cache из CacheChallenge
             signature.update(data);
-            // сравниваем предоставленную подпись с вычисленной и возвращаем ture/false
+            // сравниваем предоставленную подпись с вычисленной и возвращаем true/false
             return signature.verify(signatureBytes);
         } catch (NoSuchAlgorithmException e) {
             log.error("Алгоритм Ed25519 не поддерживается: {}", e.getMessage(), e);
