@@ -32,7 +32,28 @@ public class CryptographyServiceImpl implements CryptographyService {
     }
 
     @Override
-    public boolean verifySignature(PublicKey publicKey, byte[] data, byte[] signatureBytes) {
+    public boolean verifySignature(PublicKey publicKey, byte[] data, byte[] signatureBytes) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException {
+        try {
+            Signature signature = Signature.getInstance("Ed25519", "BC");
+            signature.initVerify(publicKey);
+            signature.update(data);
+            return signature.verify(signatureBytes);
+        }
+        catch (NoSuchAlgorithmException e) {
+            System.err.println("Алгоритм не поддерживается" + e.getMessage());
+        }
+        catch (NoSuchProviderException e) {
+            System.err.println("Провайдер не найден" + e.getMessage());
+        }
+        catch (InvalidKeyException e) {
+            System.err.println("Недопустимый публичный ключ" + e.getMessage());
+        }
+        catch (SignatureException e) {
+            System.err.println("Ошибка при обработке подписи" + e.getMessage());
+        }
+        catch (Exception e) {
+            System.err.println("Непредвиденная ошибка" + e.getMessage());
+        }
         return false;
     }
 }

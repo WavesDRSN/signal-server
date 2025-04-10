@@ -1,8 +1,6 @@
 package wavesDRSN.p2p_messenger_backend.services;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PublicKey;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 
 // TODO: сервисный класс (Spring Bean), отвечающий за криптографические операции, связанные с аутентификацией
@@ -22,5 +20,5 @@ public interface CryptographyService {
      * @param signatureBytes отдельное док-во, присланное клиентом с помощью приватного ключа, data и Ed25519
      * @return ДА/НЕТ
      */
-    boolean verifySignature(PublicKey publicKey, byte[] data, byte[] signatureBytes);
+    boolean verifySignature(PublicKey publicKey, byte[] data, byte[] signatureBytes) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException;
 }
