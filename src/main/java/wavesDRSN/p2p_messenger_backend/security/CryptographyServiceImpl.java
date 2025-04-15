@@ -26,7 +26,7 @@ public class CryptographyServiceImpl implements CryptographyService {
             throw new RuntimeException(errorMessage, e);
         } catch (InvalidKeySpecException e) {
             // Если формат ключа неверен - пробрасываем стандартное исключение
-            log.warn("Ошибка парсинга публичного ключа: неверный формат или данные. Length: {}", publicKeyDerBytes != null ? publicKeyDerBytes.length : "null", e);
+            log.warn("Ошибка парсинга публичного ключа: неверный формат или данные. Length: {}", publicKeyDerBytes.length, e);
             throw e; // Пробрасываем дальше
         }
     }
