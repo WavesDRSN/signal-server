@@ -1,8 +1,6 @@
 package wavesDRSN.p2p_messenger_backend.session;
 
-import gRPC.v1.IceCandidatesMessage;
-import gRPC.v1.SessionDescription;
-import gRPC.v1.UserConnectionResponse;
+import gRPC.v1.Signaling.*;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
 
