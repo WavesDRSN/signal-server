@@ -33,6 +33,7 @@ ext {
 	grpcVersion = '1.58.0' // Совместимая с grpc-spring-boot-starter 2.15.0
 	protobufVersion = '3.25.5'
 	bouncyCastleVersion = '1.70' // Криптография
+	caffeineVersion = '3.2.0' // кэш
 }
 
 dependencies {
@@ -72,7 +73,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	//Cache
-	implementation 'com.github.ben-manes.caffeine:caffeine:3.2.0'
+	implementation "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}" 
 }
 
 protobuf {
