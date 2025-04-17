@@ -1,7 +1,5 @@
 package wavesDRSN.p2p_messenger_backend.security;
 
-import java.time.Duration;
-
 public interface ChallengeCache  {
     /**
      *  Сохраняет challenge с TTL
