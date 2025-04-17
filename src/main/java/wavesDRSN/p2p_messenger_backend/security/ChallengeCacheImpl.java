@@ -29,9 +29,13 @@ public class ChallengeCacheImpl implements ChallengeCache {
     @Override
     public byte[] getAndRemove(String challengeId) {
         byte[] challenge = cacheStore.getIfPresent(challengeId);
-        if (challenge != null) {
-            cacheStore.invalidate(challengeId);
+
+        if (challenge == null) {
+            throw new IllegalArgumentException("Challenge с ID " + challengeId + " не найден в кэше");
         }
+
+        cacheStore.invalidate(challengeId);
+
         return challenge;
     }
 
