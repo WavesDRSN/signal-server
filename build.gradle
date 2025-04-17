@@ -70,6 +70,9 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5',
 			'io.jsonwebtoken:jjwt-jackson:0.11.5'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	//Cache
+	implementation 'com.github.ben-manes.caffeine:caffeine:3.2.0'
 }
 
 protobuf {
