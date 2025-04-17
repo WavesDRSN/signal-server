@@ -73,7 +73,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	//Cache
-	implementation "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}" 
+	implementation "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}"
 }
 
 protobuf {
