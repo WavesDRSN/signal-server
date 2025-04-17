@@ -7,9 +7,8 @@ public interface ChallengeCache  {
      *  Сохраняет challenge с TTL
      * @param challengeId идентификатор
      * @param challenge байты challenge
-     * @param TTL время жизни
      */
-    void putChallenge(String challengeId, byte[] challenge, Duration TTL);
+    void putChallenge(String challengeId, byte[] challenge);
 
     /**
      * Получает и удаляет challenge по идентификатору
