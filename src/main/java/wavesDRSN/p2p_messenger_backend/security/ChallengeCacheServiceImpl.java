@@ -7,7 +7,7 @@ import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
-public class ChallengeCacheImpl implements ChallengeCache {
+public class ChallengeCacheServiceImpl implements ChallengeCacheService {
     private final Cache<String, byte[]> cacheStore;
 
     // добавляет запись в кэш

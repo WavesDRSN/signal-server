@@ -1,6 +1,6 @@
 package wavesDRSN.p2p_messenger_backend.security;
 
-public interface ChallengeCache  {
+public interface ChallengeCacheService {
     /**
      *  Сохраняет challenge с TTL
      * @param challengeId идентификатор
