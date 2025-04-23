@@ -1,25 +1,16 @@
 package wavesDRSN.p2p_messenger_backend.services.auth;
 
 import org.springframework.stereotype.Service;
-import wavesDRSN.p2p_messenger_backend.auth.model.User;
+import wavesDRSN.p2p_messenger_backend.dto.UserDTO;
+import wavesDRSN.p2p_messenger_backend.exceptions.UsernameAlreadyExistsException;
 
-import java.security.PublicKey;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
 
 @Service
-public class UserService {
-    private final Map<String, User> users = new ConcurrentHashMap<>();
+public interface UserService {
+    UserDTO registerUser(String username, byte[] publicKey) throws UsernameAlreadyExistsException;
 
-    public void registerUser(String nickname, PublicKey publicKey) {
-        users.put(nickname, new User(nickname, publicKey));
-    }
+    Optional<UserDTO> getUserByUsername(String username);
 
-    public Optional<User> getUser(String nickname) {
-        return Optional.ofNullable(users.get(nickname));
-    }
-
-    public boolean existsByNickname(String nickname) {
-        return users.containsKey(nickname);
-    }
+    boolean existsByUsername(String username);
 }
