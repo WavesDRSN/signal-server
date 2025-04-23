@@ -15,24 +15,21 @@ public class IceCandidateHandler {
     }
     private static final Logger logger = LoggerFactory.getLogger(IceCandidateHandler.class);
 
-    public void handleCandidates(IceCandidatesMessage message) {
+    public void handleCandidates(String senderKey, IceCandidatesMessage candidates) {
         try {
-            logger.debug("Handling {} ICE candidates from {} to {}",
-                message.getCandidatesCount(), message.getSender(), message.getReceiver());
-
-            sessionManager.getSession(message.getReceiver()).ifPresentOrElse(
-                receiver -> {
-                    logger.info("Forwarding ICE candidates from {} to {}",
-                        message.getSender(), message.getReceiver());
-                    receiver.sendIceCandidates(message);
-                    logger.debug("ICE candidates forwarded");
-                },
-                () -> logger.warn("Receiver {} not found for ICE candidates from {}",
-                    message.getReceiver(), message.getSender())
-            );
-
+            sessionManager.getSessionByKey(senderKey).ifPresent(sender -> {
+                sessionManager.getSession(candidates.getReceiver()).ifPresentOrElse(
+                    receiver -> {
+                        receiver.sendIceCandidates(candidates);
+                        logger.info("Forwarded ICE candidates from {} to {}",
+                            sender.getUsername(), receiver.getUsername());
+                    },
+                    () -> logger.warn("Receiver {} not found for ICE from {}",
+                        candidates.getReceiver(), sender.getUsername())
+                );
+            });
         } catch (Exception e) {
-            logger.error("ICE candidates handling failed: {}", e.getMessage(), e);
+            logger.error("ICE processing failed: {}", e.getMessage(), e);
         }
     }
 }

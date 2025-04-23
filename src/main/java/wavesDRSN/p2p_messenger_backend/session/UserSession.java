@@ -10,12 +10,15 @@ import java.time.Instant;
 public class UserSession {
     private final String username;
     private final StreamObserver<UserConnectionResponse> observer;
+    private final String userKey;
     private volatile Instant lastActive;
-    private StreamObserver<SessionDescription> sdpObserver;
-    private StreamObserver<IceCandidatesMessage> iceObserver;
+    private StreamObserver<SDPExchange> sdpObserver;
+    private StreamObserver<ICEExchange> iceObserver;
 
-    public UserSession(String username, StreamObserver<UserConnectionResponse> observer) {
+    public UserSession(String username, String userKey, 
+                      StreamObserver<UserConnectionResponse> observer) {
         this.username = username;
+        this.userKey = userKey;
         this.observer = observer;
         this.lastActive = Instant.now();
     }
@@ -33,23 +36,23 @@ public class UserSession {
         return lastActive;
     }
 
-    public void setSdpObserver(StreamObserver<SessionDescription> sdpObserver) {
+    public void setSdpObserver(StreamObserver<SDPExchange> sdpObserver) {
         this.sdpObserver = sdpObserver;
     }
 
-    public void setIceObserver(StreamObserver<IceCandidatesMessage> iceObserver) {
+    public void setIceObserver(StreamObserver<ICEExchange> iceObserver) {
         this.iceObserver = iceObserver;
     }
 
     public void sendSDP(SessionDescription sdp) {
         if (sdpObserver != null) {
-            sdpObserver.onNext(sdp);
+            sdpObserver.onNext(SDPExchange.newBuilder().setSessionDescription(sdp).build());
         }
     }
 
     public void sendIceCandidates(IceCandidatesMessage candidates) {
         if (iceObserver != null) {
-            iceObserver.onNext(candidates);
+            iceObserver.onNext(ICEExchange.newBuilder().setIceCandidates(candidates).build());
         }
     }
 

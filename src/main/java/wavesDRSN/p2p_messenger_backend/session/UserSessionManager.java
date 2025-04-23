@@ -16,8 +16,10 @@ import java.util.concurrent.*;
 @Component
 public class UserSessionManager {
     private final Map<String, UserSession> sessions = new ConcurrentHashMap<>();
+    private final Map<String, String> keyToUserMap = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static final Logger logger = LoggerFactory.getLogger(UserSessionManager.class);
+
 
     @PostConstruct
     public void init() {
@@ -30,22 +32,45 @@ public class UserSessionManager {
         scheduler.shutdown();
     }
 
-    public void createSession(String username, StreamObserver<UserConnectionResponse> observer) {
-        UserSession session = new UserSession(username, observer);
+    public void createSession(String username, String userKey,
+                            StreamObserver<UserConnectionResponse> observer) {
+        UserSession session = new UserSession(username, userKey, observer);
         sessions.put(username, session);
+        keyToUserMap.put(userKey, username);
         broadcastUsersList();
+        logger.info("Created session for {} with key {}", username, userKey);
     }
 
     // Удаление сессии
     public void removeSession(String username) {
         UserSession session = sessions.remove(username);
         if (session != null) {
+            keyToUserMap.values().removeIf(v -> v.equals(username));
             session.close();
             broadcastUsersList();
+            logger.info("Removed session for {}", username);
         }
     }
 
-    public void registerSdpObserver(String userId, StreamObserver<SessionDescription> observer) {
+    public String getUsernameByKey(String key) {
+        if (validateKey(key)) return keyToUserMap.get(key);
+        return null;
+    }
+
+    public boolean validateKey(String userKey) {
+        return keyToUserMap.containsKey(userKey);
+    }
+
+    public Optional<UserSession> getSession(String username) {
+        return Optional.ofNullable(sessions.get(username));
+    }
+
+    public Optional<UserSession> getSessionByKey(String userKey) {
+        return Optional.ofNullable(keyToUserMap.get(userKey))
+            .map(sessions::get);
+    }
+
+    public void registerSdpObserver(String userId, StreamObserver<SDPExchange> observer) {
         logger.debug("Registering SDP observer for {}", userId);
         UserSession session = sessions.get(userId);
         if (session != null) {
@@ -56,7 +81,7 @@ public class UserSessionManager {
         }
     }
 
-    public void registerIceObserver(String userId, StreamObserver<IceCandidatesMessage> observer) {
+    public void registerIceObserver(String userId, StreamObserver<ICEExchange> observer) {
         logger.debug("Registering ICE observer for {}", userId);
         UserSession session = sessions.get(userId);
         if (session != null) {
@@ -83,16 +108,20 @@ public class UserSessionManager {
 
     public void broadcastUsersList() {
         UsersList usersList = UsersList.newBuilder()
-                .addAllUsers(sessions.keySet().stream()
-                        .map(name -> User.newBuilder().setName(name).build())
-                        .toList())
-                .build();
+            .addAllUsers(sessions.keySet().stream()
+                .map(name -> User.newBuilder().setName(name).build())
+                .toList())
+            .build();
 
-        sessions.values().forEach(session ->
-            session.sendResponse(UserConnectionResponse.newBuilder()
-                .setUsersList(usersList)
-                .build())
-        );
+        sessions.values().forEach(session -> {
+            try {
+                session.sendResponse(UserConnectionResponse.newBuilder()
+                    .setUsersList(usersList)
+                    .build());
+            } catch (Exception e) {
+                logger.error("Error broadcasting to {}: {}", session.getUsername(), e.getMessage());
+            }
+        });
     }
 
     public void updateLastActive(String username) {
@@ -102,10 +131,6 @@ public class UserSessionManager {
         }
     }
 
-    public Optional<UserSession> getSession(String username) {
-        return Optional.ofNullable(sessions.get(username));
-    }
-
     private void checkInactiveSessions() {
         logger.debug("Checking inactive sessions");
         Instant now = Instant.now();
@@ -113,6 +138,7 @@ public class UserSessionManager {
             boolean isInactive = Duration.between(session.getLastActive(), now).toMinutes() > 5;
             if (isInactive) {
                 logger.info("Removing inactive session: {}", session.getUsername());
+                keyToUserMap.values().removeIf(v -> v.equals(session.getUsername()));
             }
             return isInactive;
         });

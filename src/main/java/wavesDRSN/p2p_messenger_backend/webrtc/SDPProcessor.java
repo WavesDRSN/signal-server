@@ -15,20 +15,19 @@ public class SDPProcessor {
         this.sessionManager = sessionManager;
     }
 
-    public void processSDP(SessionDescription sdp) {
+    public void processSDP(String senderKey, SessionDescription sdp) {
         try {
-            logger.debug("Attempting to process SDP for {}", sdp.getReceiver());
-
-            sessionManager.getSession(sdp.getReceiver()).ifPresentOrElse(
-                receiver -> {
-                    logger.info("Forwarding SDP from {} to {}", sdp.getSender(), sdp.getReceiver());
-                    receiver.sendSDP(sdp);
-                    logger.debug("SDP forwarded successfully");
-                },
-                () -> logger.warn("Receiver {} not found for SDP from {}",
-                    sdp.getReceiver(), sdp.getSender())
-            );
-
+            sessionManager.getSessionByKey(senderKey).ifPresent(sender -> {
+                sessionManager.getSession(sdp.getReceiver()).ifPresentOrElse(
+                    receiver -> {
+                        receiver.sendSDP(sdp);
+                        logger.info("Forwarded SDP from {} to {}",
+                            sender.getUsername(), receiver.getUsername());
+                    },
+                    () -> logger.warn("Receiver {} not found for SDP from {}",
+                        sdp.getReceiver(), sender.getUsername())
+                );
+            });
         } catch (Exception e) {
             logger.error("SDP processing failed: {}", e.getMessage(), e);
         }
