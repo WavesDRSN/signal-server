@@ -12,10 +12,10 @@ service UserConnection {
   rpc LoadUsersList(stream UserConnectionRequest) returns (stream UserConnectionResponse);
   rpc UserDisconnect(DisconnectRequest) returns (DisconnectResponse);
   // Обмен SDP предложением и ответом
-  rpc ExchangeSDP(stream SessionDescription) returns (stream SessionDescription);
+  rpc ExchangeSDP(stream SDPExchange) returns (stream SDPExchange);
 
   // Отправка группы ICE-кандидатов
-  rpc SendIceCandidates(stream IceCandidatesMessage) returns (stream IceCandidatesMessage);
+  rpc SendIceCandidates(stream ICEExchange) returns (stream ICEExchange);
 }
 
 message DisconnectResponse {
@@ -63,6 +63,22 @@ message AlivePacket{
   // Метка когда создался пакет
 }
 
+message SDPExchange {
+  oneof message_type {
+    SessionDescription session_description = 1;
+    SDPStreamInitialRequest initial_request = 2;
+    SDPStreamInitialResponse initial_response = 3;
+  }
+}
+
+message ICEExchange {
+  oneof message_type {
+    IceCandidatesMessage ice_candidates = 1;
+    ICEStreamInitialRequest initial_request = 2;
+    ICEStreamInitialResponse initial_response = 3;
+  }
+}
+
 message UserConnectionResponse{
   oneof user_activity_response_type{
     // Это сообщение должно быть отправлено при первом подключении
@@ -78,6 +94,8 @@ message InitialUserConnectionResponse{
   // Интервал, который показывает как часто пользователь должен отправлять данные на сервер
   // чтобы подтверждать жизнедеятельность
   google.protobuf.Duration user_keep_alive_interval = 1;
+  // Unique userKey for installing SDP and ICE streams
+  string userKey = 2;
 }
 
 // Содержит список пользователей подключенных к серверу. Список должен обновлятся каждый раз
@@ -90,6 +108,22 @@ message UsersList{
 message User{
   // Имя пользователя должно быть отлично от пустой строки
   string name = 1;
+}
+
+message SDPStreamInitialRequest {
+  string key = 1;
+}
+
+message SDPStreamInitialResponse {
+  bool approved = 1;
+}
+
+message ICEStreamInitialRequest {
+  string key = 1;
+}
+
+message ICEStreamInitialResponse {
+  bool approved = 1;
 }
 
 // Обмен SDP
