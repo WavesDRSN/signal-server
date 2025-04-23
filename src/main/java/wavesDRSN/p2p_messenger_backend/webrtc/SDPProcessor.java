@@ -1,6 +1,6 @@
 package wavesDRSN.p2p_messenger_backend.webrtc;
 
-import gRPC.v1.SessionDescription;
+import gRPC.v1.Signaling.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

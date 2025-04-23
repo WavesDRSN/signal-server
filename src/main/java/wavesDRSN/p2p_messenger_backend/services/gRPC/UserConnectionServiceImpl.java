@@ -1,7 +1,7 @@
 package wavesDRSN.p2p_messenger_backend.services.gRPC;
 
 import com.google.protobuf.Duration;
-import gRPC.v1.*;
+import gRPC.v1.Signaling.*;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.slf4j.Logger;
