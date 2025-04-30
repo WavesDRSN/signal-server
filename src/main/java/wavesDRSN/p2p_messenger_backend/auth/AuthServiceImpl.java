@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import wavesDRSN.p2p_messenger_backend.auth.model.*;
 import wavesDRSN.p2p_messenger_backend.dto.UserDTO;
 import wavesDRSN.p2p_messenger_backend.security.CryptographyServiceImpl;
+import wavesDRSN.p2p_messenger_backend.security.JwtTokenProvider;
 import wavesDRSN.p2p_messenger_backend.services.auth.*;
 
 import java.security.PublicKey;
