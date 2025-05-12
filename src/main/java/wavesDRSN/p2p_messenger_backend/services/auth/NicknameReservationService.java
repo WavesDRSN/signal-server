@@ -34,6 +34,12 @@ public class NicknameReservationService {
         reservations.remove(token);
     }
 
+    public boolean existsByNickname(String nickname) {
+        return reservations.values().stream()
+                .anyMatch(r -> r.getNickname().equals(nickname) &&
+                        r.getExpiresAt().isAfter(Instant.now()));
+    }
+
     @Scheduled(fixedRate = 5 * 60 * 1000) // Каждые 5 минут
     public void cleanupExpiredReservations() {
         Instant now = Instant.now();
