@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 @Service
 public class NicknameReservationService {
     private final Map<String, NicknameReservation> reservations = new ConcurrentHashMap<>();
-    private final long reservationTimeoutMinutes = 15;
+    private final byte reservationTimeoutMinutes = 1;
 
     public NicknameReservation reserve(String nickname) {
         String token = UUID.randomUUID().toString();
