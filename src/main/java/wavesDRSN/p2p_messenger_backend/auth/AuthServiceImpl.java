@@ -42,9 +42,11 @@ public class AuthServiceImpl extends AuthorisationGrpc.AuthorisationImplBase {
                                StreamObserver<ReserveNicknameResponse> responseObserver) {
         try {
             String nickname = request.getNickname();
-            if (userService.existsByUsername(nickname)) {
+
+            // Проверяем занятость никнейма везде
+            if (isNicknameUnavailable(nickname)) {
                 responseObserver.onError(Status.ALREADY_EXISTS
-                    .withDescription("Nickname already taken")
+                    .withDescription("Nickname already taken or reserved")
                     .asRuntimeException());
                 return;
             }
@@ -62,6 +64,11 @@ public class AuthServiceImpl extends AuthorisationGrpc.AuthorisationImplBase {
                 .withDescription("Reservation failed: " + e.getMessage())
                 .asRuntimeException());
         }
+    }
+
+    private boolean isNicknameUnavailable(String nickname) {
+        return userService.existsByUsername(nickname) ||
+               reservationService.existsByNickname(nickname);
     }
 
     @Override
