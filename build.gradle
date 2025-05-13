@@ -34,6 +34,7 @@ ext {
 	protobufVersion = '3.25.5'
 	bouncyCastleVersion = '1.70' // Криптография
 	caffeineVersion = '3.2.0' // кэш
+	jakartaServletApiVersion = '6.1.0'
 }
 
 dependencies {
@@ -74,6 +75,10 @@ dependencies {
 
 	//Cache
 	implementation "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}"
+
+	//SpringSec
+	implementation("jakarta.servlet:jakarta.servlet-api:${jakartaServletApiVersion}")
+	implementation 'org.springframework.boot:spring-boot-starter-web'
 }
 
 protobuf {

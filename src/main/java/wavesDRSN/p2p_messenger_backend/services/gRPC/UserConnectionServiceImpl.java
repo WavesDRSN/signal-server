@@ -7,6 +7,7 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import wavesDRSN.p2p_messenger_backend.session.UserSessionManager;
 import wavesDRSN.p2p_messenger_backend.webrtc.IceCandidateHandler;
 import wavesDRSN.p2p_messenger_backend.webrtc.SDPProcessor;
@@ -31,6 +32,7 @@ public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnection
     }
 
     @Override
+    @PreAuthorize("isAuthenticated()")
     public StreamObserver<UserConnectionRequest> loadUsersList(
             StreamObserver<UserConnectionResponse> responseObserver) {
         return new StreamObserver<UserConnectionRequest>() {
@@ -104,6 +106,7 @@ public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnection
     }
 
     @Override
+    @PreAuthorize("isAuthenticated()")
     public void userDisconnect(DisconnectRequest request,
                               StreamObserver<DisconnectResponse> responseObserver) {
         try {
@@ -120,6 +123,7 @@ public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnection
     }
 
     @Override
+    @PreAuthorize("isAuthenticated()")
     public StreamObserver<SDPExchange> exchangeSDP(
             StreamObserver<SDPExchange> responseObserver) {
         return new StreamObserver<SDPExchange>() {
@@ -191,6 +195,7 @@ public class UserConnectionServiceImpl extends UserConnectionGrpc.UserConnection
     }
 
     @Override
+    @PreAuthorize("isAuthenticated()")
     public StreamObserver<ICEExchange> sendIceCandidates(
             StreamObserver<ICEExchange> responseObserver) {
         return new StreamObserver<ICEExchange>() {

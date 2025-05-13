@@ -33,3 +33,4 @@ volumes:
   p2p-db-migration:
 networks:
   p2p-net:
+    driver: bridge

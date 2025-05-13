@@ -2,9 +2,9 @@ package wavesDRSN.p2p_messenger_backend.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -31,16 +31,6 @@ public class UserEntity {
     private String username;
 
     @Column(name = "public_key", nullable = false, unique = true, columnDefinition = "BYTEA")
-    @NotBlank(message = "Публичный ключ не может быть пустым")
+    @NotNull(message = "Публичный ключ не может быть пустым")
     private byte[] publicKey;
-
-    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    public void prePersist() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-    }
 }

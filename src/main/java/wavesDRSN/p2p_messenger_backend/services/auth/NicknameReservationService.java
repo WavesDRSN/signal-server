@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 @Service
 public class NicknameReservationService {
     private final Map<String, NicknameReservation> reservations = new ConcurrentHashMap<>();
-    private final long reservationTimeoutMinutes = 15;
+    private final byte reservationTimeoutMinutes = 1;
 
     public NicknameReservation reserve(String nickname) {
         String token = UUID.randomUUID().toString();
@@ -32,6 +32,12 @@ public class NicknameReservationService {
 
     public void removeReservation(String token) {
         reservations.remove(token);
+    }
+
+    public boolean existsByNickname(String nickname) {
+        return reservations.values().stream()
+                .anyMatch(r -> r.getNickname().equals(nickname) &&
+                        r.getExpiresAt().isAfter(Instant.now()));
     }
 
     @Scheduled(fixedRate = 5 * 60 * 1000) // Каждые 5 минут

@@ -7,7 +7,9 @@ import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import wavesDRSN.p2p_messenger_backend.auth.model.*;
+import wavesDRSN.p2p_messenger_backend.dto.UserDTO;
 import wavesDRSN.p2p_messenger_backend.security.CryptographyServiceImpl;
+import wavesDRSN.p2p_messenger_backend.security.JwtTokenProvider;
 import wavesDRSN.p2p_messenger_backend.services.auth.*;
 
 import java.security.PublicKey;
@@ -40,9 +42,11 @@ public class AuthServiceImpl extends AuthorisationGrpc.AuthorisationImplBase {
                                StreamObserver<ReserveNicknameResponse> responseObserver) {
         try {
             String nickname = request.getNickname();
-            if (userService.existsByNickname(nickname)) {
+
+            // Проверяем занятость никнейма везде
+            if (isNicknameUnavailable(nickname)) {
                 responseObserver.onError(Status.ALREADY_EXISTS
-                    .withDescription("Nickname already taken")
+                    .withDescription("Nickname already taken or reserved")
                     .asRuntimeException());
                 return;
             }
@@ -62,6 +66,11 @@ public class AuthServiceImpl extends AuthorisationGrpc.AuthorisationImplBase {
         }
     }
 
+    private boolean isNicknameUnavailable(String nickname) {
+        return userService.existsByUsername(nickname) ||
+               reservationService.existsByNickname(nickname);
+    }
+
     @Override
     public void register(RegisterRequest request,
                         StreamObserver<RegisterResponse> responseObserver) {
@@ -72,7 +81,7 @@ public class AuthServiceImpl extends AuthorisationGrpc.AuthorisationImplBase {
             NicknameReservation reservation = reservationService.validateToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid reservation token"));
 
-            userService.registerUser(reservation.getNickname(), publicKey);
+            userService.registerUser(reservation.getNickname(), publicKey.getEncoded());
             reservationService.removeReservation(token);
 
             responseObserver.onNext(RegisterResponse.newBuilder()
@@ -101,7 +110,7 @@ public class AuthServiceImpl extends AuthorisationGrpc.AuthorisationImplBase {
                                 StreamObserver<ChallengeResponse> responseObserver) {
         try {
             String username = request.getUsername();
-            User user = userService.getUser(username)
+            UserDTO user = userService.getUserByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
             ChallengeService.Challenge challenge = challengeService.generateChallenge(username);
@@ -124,13 +133,15 @@ public class AuthServiceImpl extends AuthorisationGrpc.AuthorisationImplBase {
                               StreamObserver<AuthenticationResponse> responseObserver) {
         try {
             String username = request.getUsername();
-            User user = userService.getUser(username)
+            UserDTO user = userService.getUserByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            PublicKey publicKey = cryptoService.parsePublicKey(user.getPublicKey());
 
             challengeService.validateChallenge(
                 request.getChallengeId(),
                 request.getSignature().toByteArray(),
-                user.publicKey()
+                publicKey
             );
 
             String jwt = tokenProvider.generateToken(username);
