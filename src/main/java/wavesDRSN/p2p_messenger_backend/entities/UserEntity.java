@@ -34,6 +34,6 @@ public class UserEntity {
     @NotNull(message = "Публичный ключ не может быть пустым")
     private byte[] publicKey;
 
-    @Column(name = "fcm_token")
+    @Column(name = "fcm_token", nullable = false, unique = true)
     private String fcmToken;
 }
