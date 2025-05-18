@@ -1,5 +1,6 @@
 package wavesDRSN.p2p_messenger_backend.services.auth;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,12 +13,34 @@ import wavesDRSN.p2p_messenger_backend.utils.UserMapper;
 
 import java.util.Optional;
 
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService{
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+
+    @Override
+    @Transactional
+    public boolean updateFcmToken(String userId, String fcmToken) {
+        try {
+            UserEntity user = userRepository.findById(Long.valueOf(userId))
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+            user.setFcmToken(fcmToken);
+            userRepository.save(user);
+            log.info("Updated FCM token for user: {}", userId);
+            return true;
+
+        } catch (EntityNotFoundException ex) {
+            log.warn("Attempt to update token for non-existent user: {}", userId);
+            return false;
+        } catch (Exception e) {
+            log.error("Error updating FCM token for user {}: {}", userId, e.getMessage());
+            return false;
+        }
+    }
 
     @Override
     @Transactional
