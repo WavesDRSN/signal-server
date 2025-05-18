@@ -38,6 +38,16 @@ public class AuthServiceImpl extends AuthorisationGrpc.AuthorisationImplBase {
     }
 
     @Override
+    public void updateFcmToken(UpdateTokenRequest request,
+                               StreamObserver<UpdateTokenResponse> responseObserver) {
+        userService.updateFcmToken(request.getUserId(), request.getFcmToken());
+        responseObserver.onNext(UpdateTokenResponse.newBuilder()
+                .setSuccess(true)
+                .build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void reserveNickname(ReserveNicknameRequest request,
                                StreamObserver<ReserveNicknameResponse> responseObserver) {
         try {
