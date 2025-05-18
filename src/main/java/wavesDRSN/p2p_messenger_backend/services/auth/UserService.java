@@ -13,4 +13,6 @@ public interface UserService {
     Optional<UserDTO> getUserByUsername(String username);
 
     boolean existsByUsername(String username);
+
+    boolean updateFcmToken(String userId, String fcmToken);
 }
