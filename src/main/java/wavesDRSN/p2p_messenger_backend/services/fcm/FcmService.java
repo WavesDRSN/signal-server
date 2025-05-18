@@ -1,9 +1,8 @@
-package wavesDRSN.p2p_messenger_backend.services;
+package wavesDRSN.p2p_messenger_backend.services.fcm;
 
 import com.google.firebase.messaging.*;
 import org.springframework.stereotype.Service;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 @Service
 public class FcmService {
