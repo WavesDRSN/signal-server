@@ -22,8 +22,23 @@ service Authorisation {
   rpc RequestChallenge (ChallengeRequest) returns (ChallengeResponse);
 
   rpc Authentication (AuthenticationRequest) returns (AuthenticationResponse);
+
+  rpc UpdateFcmToken (UpdateTokenRequest) returns (UpdateTokenResponse);
 }
 
+/* Сообщение для обновления токена пользователя. Вызывается если
+ 1) Пользователь переустановил приложение.
+ 2) Пользователь очистил данные приложения.
+ 3) Firebase SDK обновился.*/
+message UpdateTokenRequest {
+  string user_id = 1;
+  string fcm_token = 2;
+}
+
+/* Ответ на попытку обновления токена */
+message UpdateTokenResponse {
+  bool success = 1;
+}
 
 /* Сообщение для бронирования никнейма. Вызывается перед генерацией ключей. */
 message ReserveNicknameRequest {
