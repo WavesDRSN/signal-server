@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "gRPC.v1.Notification";
+option java_outer_classname = "NotificationProto";
+
+service NotificationService {
+  // Отправка уведомления конкретному устройству или в топик
+  rpc SendNotification (NotificationRequest) returns (NotificationResponse);
+}
+
+message NotificationRequest {
+  oneof target {
+    string fcm_token = 1;   // Персональное уведомление
+    string topic = 2;       // Рассылка в тему
+  }
+
+  NotificationPayload payload = 3;
+}
+
+message NotificationPayload {
+  string title = 1;
+  string body = 2;
+  map<string, string> data = 3; // Дополнительные данные
+}
+
+message NotificationResponse {
+  bool success = 1;
+  string message_id = 2;    // ID сообщения от FCM
+  string error = 3;         // Сообщение об ошибке (если success=false)
+}
