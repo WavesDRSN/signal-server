@@ -6,33 +6,32 @@ import java.util.Map;
 
 @Service
 public class FcmService {
+    private final FirebaseMessaging firebaseMessaging;
 
-    public void sendNotification(String token, String title, String body, Map<String, String> data)
-        throws FirebaseMessagingException {
-
-        Message message = Message.builder()
-            .setToken(token)
-            .setNotification(Notification.builder()
-                .setTitle(title)
-                .setBody(body)
-                .build())
-            .putAllData(data)
-            .build();
-
-        FirebaseMessaging.getInstance().sendAsync(message);
+    public FcmService(FirebaseMessaging firebaseMessaging) {
+        this.firebaseMessaging = firebaseMessaging;
     }
 
-    public void sendToTopic(String topic, String title, String body)
+    public String sendToToken(String token, String title, String body, Map<String, String> data)
         throws FirebaseMessagingException {
 
-        Message message = Message.builder()
-            .setTopic(topic)
+        Message message = buildMessage(title, body, data).setToken(token).build();
+        return firebaseMessaging.send(message);
+    }
+
+    public String sendToTopic(String topic, String title, String body, Map<String, String> data)
+        throws FirebaseMessagingException {
+
+        Message message = buildMessage(title, body, data).setTopic(topic).build();
+        return firebaseMessaging.send(message);
+    }
+
+    private Message.Builder buildMessage(String title, String body, Map<String, String> data) {
+        return Message.builder()
             .setNotification(Notification.builder()
                 .setTitle(title)
                 .setBody(body)
                 .build())
-            .build();
-
-        FirebaseMessaging.getInstance().sendAsync(message);
+            .putAllData(data);
     }
 }
