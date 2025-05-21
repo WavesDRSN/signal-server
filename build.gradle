@@ -44,6 +44,7 @@ dependencies {
 	implementation "io.grpc:grpc-stub:${grpcVersion}"
 	implementation "io.grpc:grpc-netty:${grpcVersion}"
 	compileOnly "org.apache.tomcat:annotations-api:6.0.53"
+	implementation "io.grpc:grpc-core:${grpcVersion}"
 
 	// Lombok и DevTools
 	compileOnly 'org.projectlombok:lombok'
