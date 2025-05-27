@@ -16,6 +16,8 @@ import java.util.ArrayList;
 public class JwtAuthInterceptor implements ServerInterceptor {
 
     private final JwtTokenProvider tokenProvider;
+    
+    public static final Context.Key<String> USER_ID_CONTEXT_KEY = Context.key("userId");
 
     // Ключ для извлечения заголовка Authorization
     private static final Metadata.Key<String> AUTHORIZATION_HEADER_KEY =
