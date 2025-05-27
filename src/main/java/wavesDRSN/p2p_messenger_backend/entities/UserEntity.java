@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"username"}),
         @UniqueConstraint(columnNames = {"public_key"})
 })
 @Getter
@@ -24,7 +25,7 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 32)
+    @Column(nullable = false, unique = true, length = 32)
     @NotBlank(message = "Username не может быть пустым")
     @Size(min = 5, max = 32, message = "Длина логина должна быть от 5 до 32 символов")
     @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Логин может содержать только латинские буквы, цифры и символ подчеркивания")
@@ -34,6 +35,6 @@ public class UserEntity {
     @NotNull(message = "Публичный ключ не может быть пустым")
     private byte[] publicKey;
 
-    @Column(name = "fcm_token", nullable = false, unique = true)
+    @Column(name = "fcm_token", unique = true)
     private String fcmToken;
 }
