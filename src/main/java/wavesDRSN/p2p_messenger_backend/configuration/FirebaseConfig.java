@@ -19,7 +19,7 @@ public class FirebaseConfig {
 
     private static final Logger log = LoggerFactory.getLogger(FirebaseConfig.class);
 
-    @Value("${app.firebase.service-account-path:/firebase-service-account.json}")
+    @Value("${app.firebase-configuration-file:classpath:firebase-service-account.json}")
     private String serviceAccountPath;
 
     @PostConstruct
