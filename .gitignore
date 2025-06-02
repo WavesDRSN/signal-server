@@ -38,3 +38,5 @@ out/
 
 ### Игнор тестов
 src/test/java/**/*Test.java
+
+src/main/resources/firebase-service-account.json

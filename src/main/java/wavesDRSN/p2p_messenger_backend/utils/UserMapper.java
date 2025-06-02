@@ -14,6 +14,7 @@ public class UserMapper {
                 .id(entity.getId())
                 .username(entity.getUsername())
                 .publicKey(entity.getPublicKey())
+                .fcmToken(entity.getFcmToken())
                 .build();
     }
 }

@@ -24,7 +24,6 @@ public class OnlineUserServiceImpl implements OnlineUserService {
     public void registerOnlineUser(String username, Object connection) {
         OnlineUserSession session = new OnlineUserSession(connection, System.currentTimeMillis());
         onlineUsers.put(username, session);
-        // TODO:
     }
 
     @Override

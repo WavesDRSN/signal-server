@@ -39,7 +39,7 @@ public class NotificationServiceImpl extends NotificationServiceGrpc.Notificatio
         }
 
         try {
-            String messageId;
+            String messageId = null;
 
             switch (targetCase) {
                 case FCM_TOKEN:
@@ -51,7 +51,7 @@ public class NotificationServiceImpl extends NotificationServiceGrpc.Notificatio
                             .asRuntimeException());
                         return;
                     }
-                    String tokenSuffix = targetIdentifier.substring(Math.max(0, targetIdentifier.length() - 5));
+                    String tokenSuffix = targetIdentifier.length() > 5 ? targetIdentifier.substring(targetIdentifier.length() - 5) : targetIdentifier;
                     log.info("Processing SendNotification to FCM Token. EventType: '{}', Token ends with: ...{}",
                              eventType, tokenSuffix);
                     messageId = fcmService.sendDataOnlyNotificationToToken(
@@ -77,11 +77,11 @@ public class NotificationServiceImpl extends NotificationServiceGrpc.Notificatio
                         request.getPayload().getDataMap()
                     );
                     break;
-
-                default:
-                    log.warn("No target (token or topic) specified in SendNotification request. EventType: '{}'", eventType);
+                case TARGET_NOT_SET: // Explicitly handle TARGET_NOT_SET
+                default: // Catches TARGET_NOT_SET and any future unhandled cases
+                    log.warn("No target (token or topic) specified or unknown target in SendNotification request. TargetCase: {}, EventType: '{}'", targetCase, eventType);
                     responseObserver.onError(Status.INVALID_ARGUMENT
-                        .withDescription("No target (token or topic) specified for notification.")
+                        .withDescription("No target (token or topic) specified, or unknown target type for notification.")
                         .asRuntimeException());
                     return;
             }
@@ -111,8 +111,8 @@ public class NotificationServiceImpl extends NotificationServiceGrpc.Notificatio
             if (targetCase == NotificationRequest.TargetCase.FCM_TOKEN &&
                 targetIdentifier != null && !targetIdentifier.isEmpty() &&
                 (e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED ||
-                 e.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT)) {
-                log.info("FCM token for target '{}', EventType '{}' seems invalid ({}). Attempting to remove it.",
+                 e.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT)) { // Check for specific error codes
+                log.info("FCM token for target '{}', EventType '{}' seems invalid ({}). Attempting to remove it via UserService.",
                          targetIdentifier, eventType, e.getMessagingErrorCode());
                  try {
                     userService.removeFcmToken(targetIdentifier);
