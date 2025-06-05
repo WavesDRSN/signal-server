@@ -9,6 +9,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.ArrayList;
+import java.util.Arrays; // For Arrays.asList
+import java.util.List;   // For List
 
 @Slf4j
 @GrpcGlobalServerInterceptor
@@ -24,7 +26,11 @@ public class JwtAuthInterceptor implements ServerInterceptor {
             Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER);
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private static final String AUTH_SERVICE_NAME = gRPC.v1.Authentication.AuthorisationGrpc.SERVICE_NAME; // <-- ПРОВЕРЬТЕ И ИСПРАВЬТЕ ЭТО!
+    // Service names that do NOT require JWT authentication
+    private static final List<String> PUBLIC_SERVICES = Arrays.asList(
+            gRPC.v1.Authentication.AuthorisationGrpc.SERVICE_NAME,
+            gRPC.v1.Notification.NotificationServiceGrpc.SERVICE_NAME // <--- ADD NotificationService HERE
+    );
 
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
@@ -37,34 +43,56 @@ public class JwtAuthInterceptor implements ServerInterceptor {
 
         log.debug("Intercepting call to method: {}", fullMethodName);
 
-        // --- Пропускаем сервисы, не требующие аутентификации ---
-        if (AUTH_SERVICE_NAME.equals(serviceName)) {
+        // --- Skip JWT authentication for public services ---
+        if (PUBLIC_SERVICES.contains(serviceName)) {
             log.debug("Skipping JWT authentication for public service: {}", serviceName);
-            return next.startCall(call, headers); // Просто передаем дальше
+            // For public services, we still might want to extract user ID if a token IS provided
+            // This is optional and depends on whether public services might sometimes benefit
+            // from knowing the user if a token is present (e.g., for logging or optional features)
+            // If not needed, this block can be removed.
+            try {
+                String token = extractTokenFromMetadata(headers);
+                if (token != null && tokenProvider.validateToken(token)) {
+                    String userId = tokenProvider.getUserIdFromToken(token); // Assuming getUserIdFromToken exists
+                    if (userId != null && !userId.isEmpty()) {
+                        Context ctx = Context.current().withValue(USER_ID_CONTEXT_KEY, userId);
+                        return Contexts.interceptCall(ctx, call, headers, next);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Error processing optional token for public service {}: {}", serviceName, e.getMessage());
+                // Don't fail the call, just log, as auth is not strictly required.
+            }
+            return next.startCall(call, headers); // Proceed without enforcing JWT
         }
 
         // --- Выполняем JWT аутентификацию для остальных сервисов ---
         log.debug("Attempting JWT authentication for protected service: {}", serviceName);
         String token = extractTokenFromMetadata(headers);
-        Authentication authentication = null; // Объявим здесь для finally
 
         try {
             if (token != null && tokenProvider.validateToken(token)) {
                 String username = tokenProvider.getUsernameFromToken(token);
+                String userId = tokenProvider.getUserIdFromToken(token); // Assuming getUserIdFromToken exists
+
+                if (userId == null || userId.isEmpty()) {
+                    log.warn("User ID not found in token for username '{}'. JWT might be malformed or claim missing.", username);
+                    call.close(Status.UNAUTHENTICATED.withDescription("Invalid JWT: User ID missing."), new Metadata());
+                    return new ServerCall.Listener<ReqT>() {};
+                }
 
                 // Создаем Authentication только с именем пользователя (простой вариант)
-                authentication = new UsernamePasswordAuthenticationToken(
+                Authentication springAuth = new UsernamePasswordAuthenticationToken(
                         username,        // principal
                         null,            // credentials
                         new ArrayList<>() // authorities (пусто, если роли не нужны)
                 );
+                SecurityContextHolder.getContext().setAuthentication(springAuth);
+                log.debug("User '{}' (ID: {}) authenticated successfully via JWT for method: {}", username, userId, fullMethodName);
 
-                // Устанавливаем аутентификацию в контекст Spring Security
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("User '{}' authenticated successfully via JWT for method: {}", username, fullMethodName);
-
-                // Успешно аутентифицированы, передаем вызов дальше
-                return next.startCall(call, headers);
+                // Store userId in gRPC Context for access in service methods
+                Context ctx = Context.current().withValue(USER_ID_CONTEXT_KEY, userId);
+                return Contexts.interceptCall(ctx, call, headers, next);
 
             } else {
                 // Токен невалиден или отсутствует
