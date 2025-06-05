@@ -3,14 +3,16 @@ package wavesDRSN.p2p_messenger_backend.configuration;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.messaging.FirebaseMessaging;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
-import javax.annotation.PostConstruct;
+// Убрали @PostConstruct отсюда, так как инициализация будет в @Bean методе
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -22,9 +24,13 @@ public class FirebaseConfig {
     @Value("${app.firebase-configuration-file:classpath:firebase-service-account.json}")
     private String serviceAccountPath;
 
-    @PostConstruct
-    public void initialize() throws IOException {
+    // Убираем @PostConstruct отсюда
+    // public void initialize() throws IOException { ... }
+
+    @Bean
+    public FirebaseApp firebaseApp() throws IOException { // Делаем этот метод создателем бина FirebaseApp
         InputStream serviceAccountStream = null;
+        FirebaseApp app = null;
         try {
             Resource resource = new ClassPathResource(serviceAccountPath);
 
@@ -35,9 +41,9 @@ public class FirebaseConfig {
 
             if (!resource.exists()) {
                 String errorMessage = String.format(
-                    "Firebase service account file not found at path: %s. " +
-                    "Ensure the file is present (checked classpath and filesystem) or configure via 'app.firebase.service-account-path' property.",
-                    serviceAccountPath
+                        "Firebase service account file not found at path: %s. " +
+                                "Ensure the file is present (checked classpath and filesystem) or configure via 'app.firebase.service-account-path' property.",
+                        serviceAccountPath
                 );
                 log.error(errorMessage);
                 throw new IOException(errorMessage);
@@ -47,18 +53,19 @@ public class FirebaseConfig {
             serviceAccountStream = resource.getInputStream();
 
             FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccountStream))
-                .build();
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccountStream))
+                    .build();
 
             if (FirebaseApp.getApps().isEmpty()) {
-                FirebaseApp.initializeApp(options);
+                app = FirebaseApp.initializeApp(options); // Инициализируем и присваиваем
                 log.info("Firebase Admin SDK initialized successfully using service account: {}", resource.getDescription());
             } else {
+                app = FirebaseApp.getInstance(); // Получаем существующий экземпляр
                 log.info("Firebase Admin SDK already initialized.");
             }
         } catch (IOException e) {
             log.error("Failed to initialize Firebase Admin SDK using service account path '{}': {}", serviceAccountPath, e.getMessage(), e);
-            throw e;
+            throw e; // Пробрасываем исключение, чтобы Spring знал о проблеме создания бина
         } finally {
             if (serviceAccountStream != null) {
                 try {
@@ -68,5 +75,11 @@ public class FirebaseConfig {
                 }
             }
         }
+        return app; // Возвращаем созданный или полученный FirebaseApp
+    }
+
+    @Bean
+    public FirebaseMessaging firebaseMessaging(FirebaseApp firebaseApp) { // Теперь firebaseApp будет корректно внедрен
+        return FirebaseMessaging.getInstance(firebaseApp);
     }
 }

@@ -3,7 +3,7 @@ CREATE TABLE users
     id         BIGSERIAL PRIMARY KEY,       -- автоинкрементный уник ID
     username   VARCHAR(32) NOT NULL,        -- логин
     public_key BYTEA       NOT NULL UNIQUE, -- публичный ключ
-    fcm_token TEXT NOT NULL UNIQUE,
+
 
     -- Ограничения
     CONSTRAINT username_length CHECK (LENGTH(username) BETWEEN 5 AND 32),
