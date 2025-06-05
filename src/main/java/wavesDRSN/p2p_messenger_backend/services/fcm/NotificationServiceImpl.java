@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import wavesDRSN.p2p_messenger_backend.services.auth.UserService;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 @GrpcService
@@ -143,6 +145,108 @@ public class NotificationServiceImpl extends NotificationServiceGrpc.Notificatio
                 .withDescription("Unexpected internal error during notification sending.")
                 .withCause(e)
                 .asRuntimeException());
+        }
+    }
+
+    @Override
+    public void notifyServer(
+            MessageEvent request,
+            StreamObserver<NotificationResponse> responseObserver
+    ) {
+        String senderId = request.getSenderId();
+        String receiverId = request.getReceiverId();
+
+        log.info("NotifyServer called: sender={}, receiver={}", senderId, receiverId);
+
+        try {
+            // Получаем FCM токен получателя
+            String receiverFcmToken = userService.getFcmTokenByUserId(receiverId);
+
+            if (receiverFcmToken == null || receiverFcmToken.trim().isEmpty()) {
+                log.warn("No FCM token found for user: {}", receiverId);
+
+                NotificationResponse response = NotificationResponse.newBuilder()
+                        .setSuccess(false)
+                        .setErrorMessage("No FCM token found for receiver")
+                        .build();
+
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Подготавливаем данные для уведомления
+            Map<String, String> notificationData = new HashMap<>();
+            notificationData.put("sender_id", senderId);
+            notificationData.put("receiver_id", receiverId);
+            notificationData.put("action", "initiate_connection"); // Для инициации SDP соединения
+            notificationData.put("message", "У вас новое сообщение");
+
+
+            // Отправляем FCM уведомление
+            String messageId = fcmService.sendDataOnlyNotificationToToken(
+                    receiverFcmToken,
+                    "new_message",
+                    notificationData
+            );
+
+            log.info("Successfully sent pending message notification. Sender: {}, Receiver: {}, FCM Message ID: {}",
+                    senderId, receiverId, messageId);
+
+            NotificationResponse response = NotificationResponse.newBuilder()
+                    .setSuccess(true)
+                    .setMessageId(messageId != null ? messageId : "")
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid argument for pending message notification. Sender: {}, Receiver: {}. Error: {}",
+                    senderId, receiverId, e.getMessage());
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription(e.getMessage())
+                    .withCause(e)
+                    .asRuntimeException());
+        } catch (FirebaseMessagingException e) {
+            log.error("FCM error while sending pending message notification. Sender: {}, Receiver: {}. ErrorCode: {}, Message: {}",
+                    senderId, receiverId, e.getErrorCode(), e.getMessage(), e);
+
+            // Если токен недействителен, удаляем его
+            if (e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED ||
+                    e.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT) {
+                try {
+                    String receiverFcmToken = userService.getFcmTokenByUserId(receiverId);
+                    if (receiverFcmToken != null) {
+                        userService.removeFcmToken(receiverFcmToken);
+                        log.info("Removed invalid FCM token for user: {}", receiverId);
+                    }
+                } catch (Exception removeEx) {
+                    log.error("Failed to remove invalid FCM token for user {}: {}", receiverId, removeEx.getMessage());
+                }
+            }
+
+            responseObserver.onError(Status.INTERNAL
+                    .withDescription("FCM error: " + e.getErrorCode() + " - " + e.getMessage())
+                    .withCause(e)
+                    .asRuntimeException());
+        } catch (ExecutionException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            log.error("Error during pending message notification send. Sender: {}, Receiver: {}: {}",
+                    senderId, receiverId, e.getMessage(), e);
+            responseObserver.onError(Status.INTERNAL
+                    .withDescription("Internal error during notification send: " + e.getMessage())
+                    .withCause(e)
+                    .asRuntimeException());
+        } catch (Exception e) {
+            log.error("Unexpected error in notifyServer. Sender: {}, Receiver: {}: {}",
+                    senderId, receiverId, e.getMessage(), e);
+            responseObserver.onError(Status.INTERNAL
+                    .withDescription("Unexpected internal error during notification sending.")
+                    .withCause(e)
+                    .asRuntimeException());
         }
     }
 }

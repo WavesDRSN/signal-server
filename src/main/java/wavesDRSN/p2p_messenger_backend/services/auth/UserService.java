@@ -57,4 +57,6 @@ public interface UserService {
      * @param fcmToken FCM токен, который нужно удалить.
      */
     void removeFcmToken(String fcmToken);
+
+    String getFcmTokenByUserId(String userId);
 }
