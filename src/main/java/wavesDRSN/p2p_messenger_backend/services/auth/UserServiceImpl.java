@@ -152,4 +152,51 @@ public class UserServiceImpl implements UserService {
             log.info("No user found with FCM token ending ...{}. No action taken.", tokenSuffix);
         }
     }
+
+    @Override
+    @Transactional
+    public String getFcmTokenByUserId(String userId){
+        if (userId == null || userId.trim().isEmpty()) {
+            log.warn("Attempt to get FCM token with null or empty userId");
+            return null;
+        }
+
+        Long userEntityId;
+        try {
+            userEntityId = Long.valueOf(userId);
+        } catch (NumberFormatException e) {
+            log.warn("Invalid userId format passed to getFcmTokenByUserId: {}. Must be a Long.", userId);
+            return null;
+        }
+
+        log.debug("Attempting to get FCM token for user ID: {}", userEntityId);
+
+        try {
+            Optional<UserEntity> userEntity = userRepository.findById(userEntityId);
+
+            if (userEntity.isEmpty()) {
+                log.debug("User not found with ID: {}. Cannot retrieve FCM token.", userEntityId);
+                return null;
+            }
+
+            UserEntity user = userEntity.get();
+            String fcmToken = user.getFcmToken();
+
+            if (fcmToken == null || fcmToken.trim().isEmpty()) {
+                log.debug("User ID {} (username: '{}') has no FCM token registered.",
+                        userEntityId, user.getUsername());
+                return null;
+            }
+
+            String tokenSuffix = fcmToken.length() > 5 ? fcmToken.substring(fcmToken.length() - 5) : fcmToken;
+            log.debug("Successfully retrieved FCM token for user ID {} (username: '{}'). Token ends with: ...{}",
+                    userEntityId, user.getUsername(), tokenSuffix);
+
+            return fcmToken;
+
+        } catch (Exception e) {
+            log.error("Unexpected error retrieving FCM token for user ID {}: {}", userEntityId, e.getMessage(), e);
+            return null;
+        }
+    }
 }
