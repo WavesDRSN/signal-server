@@ -160,7 +160,7 @@ public class NotificationServiceImpl extends NotificationServiceGrpc.Notificatio
 
         try {
             // Получаем FCM токен получателя
-            String receiverFcmToken = userService.getFcmTokenByUserId(receiverId);
+            String receiverFcmToken = userService.getFcmTokenByUsername(receiverId);
 
             if (receiverFcmToken == null || receiverFcmToken.trim().isEmpty()) {
                 log.warn("No FCM token found for user: {}", receiverId);
@@ -177,8 +177,8 @@ public class NotificationServiceImpl extends NotificationServiceGrpc.Notificatio
 
             // Подготавливаем данные для уведомления
             Map<String, String> notificationData = new HashMap<>();
-            notificationData.put("sender_id", senderId);
-            notificationData.put("receiver_id", receiverId);
+            notificationData.put("sender_name", senderId);
+            notificationData.put("receiver_name", receiverId);
             notificationData.put("action", "initiate_connection"); // Для инициации SDP соединения
             notificationData.put("message", "У вас новое сообщение");
 
@@ -216,7 +216,7 @@ public class NotificationServiceImpl extends NotificationServiceGrpc.Notificatio
             if (e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED ||
                     e.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT) {
                 try {
-                    String receiverFcmToken = userService.getFcmTokenByUserId(receiverId);
+                    String receiverFcmToken = userService.getFcmTokenByUsername(receiverId);
                     if (receiverFcmToken != null) {
                         userService.removeFcmToken(receiverFcmToken);
                         log.info("Removed invalid FCM token for user: {}", receiverId);
