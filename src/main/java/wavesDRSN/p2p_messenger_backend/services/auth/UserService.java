@@ -58,5 +58,5 @@ public interface UserService {
      */
     void removeFcmToken(String fcmToken);
 
-    String getFcmTokenByUserId(String userId);
+    String getFcmTokenByUsername(String username);
 }

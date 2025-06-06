@@ -155,27 +155,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public String getFcmTokenByUserId(String userId){
-        if (userId == null || userId.trim().isEmpty()) {
+    public String getFcmTokenByUsername(String username){
+        if (username == null || username.trim().isEmpty()) {
             log.warn("Attempt to get FCM token with null or empty userId");
             return null;
         }
 
-        Long userEntityId;
-        try {
-            userEntityId = Long.valueOf(userId);
-        } catch (NumberFormatException e) {
-            log.warn("Invalid userId format passed to getFcmTokenByUserId: {}. Must be a Long.", userId);
-            return null;
-        }
 
-        log.debug("Attempting to get FCM token for user ID: {}", userEntityId);
+        log.debug("Attempting to get FCM token for username: {}", username);
 
         try {
-            Optional<UserEntity> userEntity = userRepository.findById(userEntityId);
+            Optional<UserEntity> userEntity = userRepository.findByUsername(username);
 
             if (userEntity.isEmpty()) {
-                log.debug("User not found with ID: {}. Cannot retrieve FCM token.", userEntityId);
+                log.debug("User not found with username: {}. Cannot retrieve FCM token.", username);
                 return null;
             }
 
@@ -183,19 +176,19 @@ public class UserServiceImpl implements UserService {
             String fcmToken = user.getFcmToken();
 
             if (fcmToken == null || fcmToken.trim().isEmpty()) {
-                log.debug("User ID {} (username: '{}') has no FCM token registered.",
-                        userEntityId, user.getUsername());
+                log.debug("User {} has no FCM token registered.",
+                        username);
                 return null;
             }
 
             String tokenSuffix = fcmToken.length() > 5 ? fcmToken.substring(fcmToken.length() - 5) : fcmToken;
-            log.debug("Successfully retrieved FCM token for user ID {} (username: '{}'). Token ends with: ...{}",
-                    userEntityId, user.getUsername(), tokenSuffix);
+            log.debug("Successfully retrieved FCM token for user {}. Token ends with: ...{}",
+                    username, tokenSuffix);
 
             return fcmToken;
 
         } catch (Exception e) {
-            log.error("Unexpected error retrieving FCM token for user ID {}: {}", userEntityId, e.getMessage(), e);
+            log.error("Unexpected error retrieving FCM token for user {}: {}", username, e.getMessage(), e);
             return null;
         }
     }
